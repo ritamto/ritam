@@ -347,12 +347,123 @@ $("flip").onclick = function () {
 };
 
 /* =====================================================
-   ANIMATED FAVICON (a coin that flips every few seconds)
-   Draws the coin on a hidden canvas and swaps it into the tab icon.
+   6. MAGIC 8-BALL
+   Add or change answers in this list whenever you like.
+   ===================================================== */
+var answers = [
+  "Yes, go for it",
+  "Definitely",
+  "Without a doubt",
+  "Looks good to me",
+  "Most likely",
+  "I wouldn't bet against it",
+  "Ask me later",
+  "Hard to say",
+  "Not sure, try again",
+  "Better not tell you now",
+  "Don't count on it",
+  "I'd say no",
+  "Very doubtful",
+  "My gut says no",
+  "Ha, no chance"
+];
+
+var ball = $("ball");
+var answerBox = $("answer");
+var shaking = false;
+
+function shakeBall() {
+  if (shaking) return;
+
+  // Make the person ask something first
+  if ($("question").value.trim() === "") {
+    answerBox.classList.add("talking");
+    answerBox.textContent = "Ask me something first";
+    return;
+  }
+
+  shaking = true;
+  answerBox.classList.remove("talking");
+  answerBox.textContent = "8";
+
+  var wait = reduceMotion ? 0 : 700;     // skip the shake if animations are turned off
+  if (!reduceMotion) ball.classList.add("shake");
+
+  setTimeout(function () {
+    ball.classList.remove("shake");
+    answerBox.classList.add("talking");
+    answerBox.textContent = answers[Math.floor(Math.random() * answers.length)];
+    shaking = false;
+  }, wait);
+}
+
+$("shake").onclick = shakeBall;
+$("ball").onclick = shakeBall;                      // clicking the ball works too
+$("question").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") shakeBall();           // press Enter to shake
+});
+
+
+/* =====================================================
+   7. SCRATCHPAD
+   Saves automatically in this browser (not on a server).
+   ===================================================== */
+var notes = $("notes");
+var saveTimer;
+
+// Count words and show a status line
+function updateInfo(message) {
+  var text = notes.value.trim();
+  var words = text === "" ? 0 : text.split(/\s+/).length;
+  $("notesInfo").textContent = words + (words === 1 ? " word" : " words") + (message ? " | " + message : "");
+}
+
+// Bring back whatever was saved last time
+notes.value = memory.get("scratchpad") || "";
+updateInfo("");
+
+// Save shortly after you stop typing
+notes.addEventListener("input", function () {
+  updateInfo("saving...");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () {
+    memory.set("scratchpad", notes.value);
+    updateInfo("saved");
+  }, 500);
+});
+
+$("copyNotes").onclick = function () {
+  if (!navigator.clipboard) { updateInfo("copy not supported here"); return; }
+  navigator.clipboard.writeText(notes.value).then(
+    function () { updateInfo("copied"); },
+    function () { updateInfo("couldn't copy"); }
+  );
+};
+
+$("downloadNotes").onclick = function () {
+  var file = new Blob([notes.value], { type: "text/plain" });
+  var link = document.createElement("a");
+  link.href = URL.createObjectURL(file);
+  link.download = "scratchpad.txt";
+  link.click();
+  URL.revokeObjectURL(link.href);
+};
+
+$("clearNotes").onclick = function () {
+  if (notes.value === "") return;
+  if (confirm("Clear everything in the scratchpad? This can't be undone.")) {
+    notes.value = "";
+    memory.set("scratchpad", "");
+    updateInfo("cleared");
+  }
+};
+/* =====================================================
+   COIN FAVICON
+   Stays still. Flips once when someone clicks "Flip a coin".
    ===================================================== */
 (function () {
   var link = document.getElementById("favicon");
-  if (!link || reduceMotion) return;   // skip if missing, or if the visitor turned animations off
+  if (!link) return;
 
   var canvas = document.createElement("canvas");
   canvas.width = 64;
@@ -372,7 +483,6 @@ $("flip").onclick = function () {
     pen.translate(32, 32);
     pen.scale(squash, 1);
 
-    // gold coin with a dark rim
     pen.beginPath();
     pen.arc(0, 0, 29, 0, Math.PI * 2);
     pen.fillStyle = "#ffd84d";
@@ -381,7 +491,6 @@ $("flip").onclick = function () {
     pen.strokeStyle = "#1d1230";
     pen.stroke();
 
-    // dotted inner ring
     pen.beginPath();
     pen.arc(0, 0, 22, 0, Math.PI * 2);
     pen.lineWidth = 2;
@@ -389,7 +498,6 @@ $("flip").onclick = function () {
     pen.stroke();
     pen.setLineDash([]);
 
-    // the tilted R
     pen.rotate(-5 * Math.PI / 180);
     pen.scale(0.62, 0.62);
     pen.translate(-34.5, -32);
@@ -399,21 +507,40 @@ $("flip").onclick = function () {
     pen.restore();
   }
 
-  var cycle = 3500;   // one flip every 3.5 seconds
-  var lastSquash = -1;
+  var flipping = false;
 
-  setInterval(function () {
-    var p = (Date.now() % cycle) / cycle;       // 0 to 1 through the cycle
-    var squash = 1;                             // resting: full coin
-    if (p >= 0.6 && p < 0.8) squash = 1 - ((p - 0.6) / 0.2) * 0.94;   // flipping to edge
-    if (p >= 0.8) squash = 0.06 + ((p - 0.8) / 0.2) * 0.94;           // flipping back
+  function flipFavicon() {
+    if (flipping || reduceMotion) return;     // one flip at a time, and none if animations are off
+    flipping = true;
 
-    squash = Math.round(squash * 20) / 20;      // only redraw when it visibly changes
-    if (squash === lastSquash) return;
-    lastSquash = squash;
+    var duration = 1400;                      // how long one flip lasts (milliseconds)
+    var begin = Date.now();
+    var last = -1;
 
-    drawCoin(squash);
-    link.type = "image/png";
-    link.href = canvas.toDataURL("image/png");
-  }, 80);
+    var timer = setInterval(function () {
+      var p = Math.min(1, (Date.now() - begin) / duration);   // 0 to 1
+
+      if (p >= 1) {
+        // Done: go back to the normal still icon
+        clearInterval(timer);
+        link.type = "image/svg+xml";
+        link.href = "favicon.svg";
+        flipping = false;
+        return;
+      }
+
+      // Two spins: the coin goes edge-on twice, then lands face-up
+      var squash = Math.max(0.06, Math.abs(Math.cos(p * 4 * Math.PI)));
+      squash = Math.round(squash * 20) / 20;
+      if (squash === last) return;
+      last = squash;
+
+      drawCoin(squash);
+      link.type = "image/png";
+      link.href = canvas.toDataURL("image/png");
+    }, 60);
+  }
+
+  // Runs in addition to the Decider's own "Flip a coin" code, so you don't need to change that
+  $("flip").addEventListener("click", flipFavicon);
 })();

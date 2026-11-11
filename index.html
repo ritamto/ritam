@@ -20,7 +20,7 @@
   <!-- ===== TOP OF THE PAGE ===== -->
   <header>
     <p class="clock" id="now"></p>
-    <h1>Ritam's<br>Workshop</h1>
+    <h1>Ritam's<br></h1>
     <p>A little corner of the internet where I keep a few toys. Doodle something, see how fast you can click, race a sentence, set a timer, or let a coin make your mind up for you.</p>
   </header>
 
@@ -91,6 +91,33 @@
       </div>
       <div id="result" role="status" aria-live="polite">...</div>
     </section>
+
+       <!-- ===== 6. MAGIC 8-BALL ===== -->
+    <section class="tile peach">
+      <h2>Magic 8-ball</h2>
+      <p class="hint">Think of a yes or no question, type it in, then shake the ball.</p>
+      <input type="text" id="question" placeholder="Should I have another biscuit?" aria-label="Your question">
+      <div class="ball" id="ball">
+        <div class="ball-window" id="answer" role="status" aria-live="polite">8</div>
+      </div>
+      <div class="row">
+        <button id="shake">Shake it</button>
+      </div>
+    </section>
+
+    <!-- ===== 7. SCRATCHPAD ===== -->
+    <section class="tile wide sky">
+      <h2>Scratchpad</h2>
+      <p class="hint">Jot anything down. It saves itself and will still be here next time you visit on this device.</p>
+      <textarea id="notes" class="notes" placeholder="Start typing..." aria-label="Scratchpad"></textarea>
+      <div class="row">
+        <button id="copyNotes">Copy</button>
+        <button id="downloadNotes">Download as .txt</button>
+        <button id="clearNotes">Clear</button>
+        <span class="small" id="notesInfo">0 words</span>
+      </div>
+    </section>
+    
 
   </main>
 
