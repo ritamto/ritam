@@ -118,27 +118,39 @@
       </div>
     </section>
 
-        <!-- ===== 8. JUKEBOX ===== -->
-    <section class="tile wide lime">
+
+  </main>
+
+  <!-- ===== BOTTOM OF THE PAGE ===== -->
+  <footer>
+    Say hello: <a href="mailto:hello@ritammisra.com">hello@ritammisra.com</a>
+  </footer>
+
+    <!-- ===== JUKEBOX (docked on the right edge) ===== -->
+  <aside class="dock" id="dock" aria-label="Jukebox">
+    <button class="dock-tab" id="dockTab" aria-expanded="false" aria-controls="dockBody">
+      <span id="dockLabel">♪ Jukebox</span>
+    </button>
+
+    <div class="dock-body" id="dockBody">
       <h2>Jukebox</h2>
       <p class="hint">Search any song or artist and play a 30-second preview.</p>
 
       <div class="row">
-        <input type="text" id="musicSearch" placeholder="Try an artist or a song" aria-label="Search music">
+        <input type="text" id="musicSearch" placeholder="Artist or song" aria-label="Search music">
         <button id="musicGo">Search</button>
       </div>
 
-      <!-- quick picks: click one to search it -->
       <div class="row">
+        <button class="chip" data-q="old hindi classics">Old Hindi</button>
         <button class="chip" data-q="jazz">Jazz</button>
-        <button class="chip" data-q="classical piano">Classical piano</button>
+        <button class="chip" data-q="classical piano">Piano</button>
         <button class="chip" data-q="lofi beats">Lo-fi</button>
       </div>
 
       <p class="small" id="musicStatus" role="status"></p>
       <ul class="tracks" id="tracks"></ul>
 
-      <!-- the player bar (hidden until you pick a song) -->
       <div class="now" id="now" hidden>
         <img id="nowArt" alt="" width="56" height="56">
         <div class="now-text">
@@ -151,14 +163,9 @@
       </div>
 
       <audio id="audio"></audio>
-    </section>
-
-  </main>
-
-  <!-- ===== BOTTOM OF THE PAGE ===== -->
-  <footer>
-    Say hello: <a href="mailto:hello@ritammisra.com">hello@ritammisra.com</a>
-  </footer>
+      <p class="small">Previews and artwork from Apple's iTunes Search.</p>
+    </div>
+  </aside>
 
   <!-- All the behaviour lives in this file -->
   <script src="script.js"></script>

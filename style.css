@@ -281,3 +281,47 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; }
 .now img { border-radius: 10px; }
 .now-text { display: flex; flex-direction: column; min-width: 140px; flex: 1; }
 .now input[type=range] { flex: 2; min-width: 140px; accent-color: var(--ink); }
+
+/* ---------- Jukebox dock (fixed to the right edge) ---------- */
+.dock {
+  position: fixed;
+  right: env(safe-area-inset-right, 0px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  max-height: 90vh;
+}
+
+/* the little tab you click to open and close */
+.dock-tab {
+  writing-mode: vertical-rl;
+  background: #b8f26b;
+  color: var(--ink);
+  border-radius: 16px 0 0 16px;
+  padding: 1rem .6rem;
+}
+
+/* the panel itself */
+.dock-body {
+  width: min(320px, calc(100vw - 3.5rem));
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #b8f26b;
+  color: var(--ink);
+  padding: 1rem;
+  border-radius: 0 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+.dock:not(.open) .dock-body { display: none; }   /* collapsed: only the tab shows */
+
+.dock-body h2 {
+  font-family: "Unbounded", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+.dock-body .row input[type=text] { min-width: 0; }
+.dock .tracks { max-height: 180px; }

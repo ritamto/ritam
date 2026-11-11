@@ -674,3 +674,17 @@ document.querySelectorAll("[data-q]").forEach(function (chip) {
     searchMusic(chip.dataset.q);
   };
 });
+
+/* =====================================================
+   JUKEBOX DOCK: open and close the side panel
+   ===================================================== */
+var dock = $("dock");
+
+$("dockTab").onclick = function () {
+  var open = dock.classList.toggle("open");
+  $("dockTab").setAttribute("aria-expanded", open ? "true" : "false");
+};
+
+// The tab says "Playing" while music is on, even when the panel is closed
+audio.addEventListener("play", function () { $("dockLabel").textContent = "♪ Playing"; });
+audio.addEventListener("pause", function () { $("dockLabel").textContent = "♪ Jukebox"; });
