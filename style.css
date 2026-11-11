@@ -326,18 +326,74 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; }
 .dock-body .row input[type=text] { min-width: 0; }
 .dock .tracks { max-height: 180px; }
 
-/* ---------- YouTube Album-Art Frame ---------- */
+/* ---------- Full-Height Results Inside Search Dock ---------- */
+.dock .tracks {
+  max-height: 45vh;
+  min-height: 180px;
+}
+
+/* ---------- Floating Bottom-Right Mini-Player ---------- */
+.mini-player {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 30;
+  width: 224px;
+  background: #b8f26b;
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mini-player[hidden] {
+  display: none;
+}
+
 .yt-box {
   width: 200px;
   height: 200px;
   border-radius: 12px;
   overflow: hidden;
-  flex: none;
+  border: 2px solid var(--ink);
   background: var(--ink);
+  margin: 0 auto;
 }
 .yt-box iframe {
   width: 100%;
   height: 100%;
   border: 0;
-  pointer-events: none; /* keeps clicks on your custom Play/Pause buttons */
+  pointer-events: none;
+}
+
+.mini-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.mini-info b,
+.mini-info small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+.mini-controls button {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.mini-player input[type=range] {
+  width: 100%;
+  accent-color: var(--ink);
+  cursor: pointer;
 }

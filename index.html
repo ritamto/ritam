@@ -126,8 +126,8 @@
     Say hello: <a href="mailto:hello@ritammisra.com">hello@ritammisra.com</a>
   </footer>
 
-   <!-- =====================================================
-     JUKEBOX DOCK (Side Panel)
+  <!-- =====================================================
+     JUKEBOX SEARCH DOCK (Side Panel - 100% Search & Results)
      ===================================================== -->
 <aside id="dock" class="dock" aria-label="Jukebox">
   <button id="dockTab" class="dock-tab" aria-expanded="false" aria-controls="dockBody">
@@ -155,28 +155,34 @@
     <!-- Status Line -->
     <p id="musicStatus" class="small" role="status"></p>
 
-    <!-- Search Results List -->
+    <!-- Full-Height Search Results List -->
     <ul id="tracks" class="tracks"></ul>
-
-    <!-- Active Track Player -->
-    <div id="now" class="now" hidden>
-      <div class="yt-box">
-        <div id="ytPlayer"></div>
-      </div>
-
-      <div class="now-text">
-        <b id="nowTitle">Track Title</b>
-        <small id="nowArtist">Artist</small>
-      </div>
-
-      <div class="row" style="width: 100%;">
-        <button id="playPause" type="button">Play</button>
-        <input id="seek" type="range" min="0" max="100" value="0" aria-label="Seek">
-        <span id="nowTime" class="small">0:00</span>
-      </div>
-    </div>
   </div>
 </aside>
+
+<!-- =====================================================
+     FLOATING MINI-PLAYER (Bottom-Right Corner)
+     ===================================================== -->
+<div id="now" class="mini-player" hidden aria-label="Now Playing">
+  <div class="yt-box">
+    <div id="ytPlayer"></div>
+  </div>
+
+  <div class="mini-info">
+    <b id="nowTitle">Track Title</b>
+    <small id="nowArtist">Artist</small>
+  </div>
+
+  <div class="mini-controls">
+    <button id="prevTrack" type="button" aria-label="Previous track">⏮</button>
+    <button id="playPause" type="button">Pause</button>
+    <button id="nextTrack" type="button" aria-label="Next track">⏭</button>
+    <span id="nowTime" class="small">0:00</span>
+  </div>
+
+  <input id="seek" type="range" min="0" max="100" value="0" aria-label="Seek">
+</div>
+
 
 
   <!-- All the behaviour lives in this file -->

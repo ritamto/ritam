@@ -546,7 +546,7 @@ $("clearNotes").onclick = function () {
 })();
 
 /* =====================================================
-   8. JUKEBOX (YouTube Music-Only Full Tracks)
+   8. JUKEBOX (YouTube Music-Only + Floating Mini-Player)
    ===================================================== */
 var YT_API_KEY = "AIzaSyBywYmbNu2Fh631pt7BHL_LZEJ3b_om1Us";
 var ytPlayer = null;
@@ -557,7 +557,7 @@ var playingIndex = -1;    // which result is playing
 
 // Load YouTube IFrame API script automatically
 var tag = document.createElement("script");
-tag.src = "https://www.youtube.com/iframe_api";
+tag.src = "https://youtube.com" + "iframe_api";
 document.head.appendChild(tag);
 
 window.onYouTubeIframeAPIReady = function () {
@@ -578,7 +578,6 @@ window.onYouTubeIframeAPIReady = function () {
 };
 
 function onPlayerStateChange(event) {
-  // 1 = Playing, 2 = Paused, 0 = Ended, 3 = Buffering
   if (event.data === YT.PlayerState.PLAYING) {
     $("playPause").textContent = "Pause";
     $("dockLabel").textContent = "♪ Playing";
@@ -587,40 +586,25 @@ function onPlayerStateChange(event) {
     $("playPause").textContent = "Play";
     $("dockLabel").textContent = "♪ Jukebox";
     stopProgressLoop();
-    updateProgress();
-  } else if (event.data === YT.PlayerState.BUFFERING) {
-    $("playPause").textContent = "Play";
-    $("dockLabel").textContent = "♪ Loading";
-    stopProgressLoop();
   } else if (event.data === YT.PlayerState.ENDED) {
     stopProgressLoop();
     if (playingIndex + 1 < songs.length) playSong(playingIndex + 1);
-    else {
-      $("playPause").textContent = "Play";
-      $("dockLabel").textContent = "♪ Jukebox";
-      updateProgress();
-    }
   }
 }
 
 function startProgressLoop() {
   stopProgressLoop();
   progressTimer = setInterval(function () {
-    updateProgress();
+    if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+    var cur = ytPlayer.getCurrentTime();
+    var dur = ytPlayer.getDuration();
+    if (dur > 0) $("seek").value = (cur / dur) * 100;
+    $("nowTime").textContent = mmss(cur);
   }, 500);
-}
-
-function updateProgress() {
-  if (!ytPlayer || !ytPlayer.getCurrentTime) return;
-  var cur = ytPlayer.getCurrentTime();
-  var dur = ytPlayer.getDuration();
-  if (dur > 0) $("seek").value = (cur / dur) * 100;
-  $("nowTime").textContent = mmss(cur);
 }
 
 function stopProgressLoop() {
   clearInterval(progressTimer);
-  progressTimer = null;
 }
 
 function say(message) { $("musicStatus").textContent = message; }
@@ -632,35 +616,34 @@ function mmss(seconds) {
   return m + ":" + (s < 10 ? "0" : "") + s;
 }
 
+// Strip noisy "(Official Audio)" / "[Lyrics]" text from YouTube titles
+function cleanTitle(raw) {
+  var txt = document.createElement("textarea");
+  txt.innerHTML = raw;
+  return txt.value.replace(/\s*[\(\[](official|audio|video|lyrics|visualizer|hd|4k).*?[\)\]]/gi, "").trim();
+}
+
 // Search YouTube strictly for Music (videoCategoryId=10)
 function searchMusic(query) {
   query = query.trim();
   if (!query) { say("Type an artist or a song first."); return; }
   say("Searching...");
 
-  var url = "https://www.googleapis.com/youtube/v3/search"
+  var url = "https://googleapis.com" + "youtube/v3/search"
     + "?part=snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=12"
     + "&q=" + encodeURIComponent(query + " official audio")
     + "&key=" + YT_API_KEY;
 
   fetch(url)
     .then(function (response) {
-      return response.json().then(function (data) {
-        if (!response.ok) {
-          console.error("YouTube Data API request failed:", data.error || data);
-          throw new Error("YouTube Data API request failed with status " + response.status);
-        }
-        return data;
-      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      return response.json();
     })
     .then(function (data) {
       songs = (data.items || []).map(function (item) {
-        // Decode HTML entities like &amp; in YouTube titles
-        var txt = document.createElement("textarea");
-        txt.innerHTML = item.snippet.title;
         return {
           videoId: item.id.videoId,
-          trackName: txt.value,
+          trackName: cleanTitle(item.snippet.title),
           artistName: item.snippet.channelTitle.replace(" - Topic", ""),
           artworkUrl: item.snippet.thumbnails.default.url
         };
@@ -668,18 +651,17 @@ function searchMusic(query) {
       showSongs();
       say(songs.length ? songs.length + " tracks found. Click one to play." : "Nothing found. Try another search.");
     })
-    .catch(function (error) {
-      if (error.message.indexOf("YouTube Data API request failed") !== 0) {
-        console.error("YouTube search failed:", error);
-      }
+    .catch(function (err) {
+      console.error("YouTube search error:", err);
       say("Couldn't reach YouTube. Check your API key or connection.");
     });
 }
 
-// Build the list of results on the page
+// Build the list of results inside the search dock
 function showSongs() {
   var list = $("tracks");
   list.innerHTML = "";
+  list.scrollTop = 0;
   playingIndex = -1;
 
   songs.forEach(function (song, index) {
@@ -707,7 +689,7 @@ function showSongs() {
   });
 }
 
-// Start playing one result
+// Start playing one result in the floating bottom-right player
 function playSong(index) {
   var song = songs[index];
   if (!song || !ytReady) return;
@@ -720,8 +702,6 @@ function playSong(index) {
   $("seek").value = 0;
   $("nowTime").textContent = "0:00";
   $("now").hidden = false;
-  $("playPause").textContent = "Play";
-  $("dockLabel").textContent = "♪ Loading";
 
   var buttons = $("tracks").querySelectorAll(".track");
   buttons.forEach(function (b, i) {
@@ -738,6 +718,14 @@ $("playPause").onclick = function () {
   } else {
     ytPlayer.playVideo();
   }
+};
+
+$("prevTrack").onclick = function () {
+  if (playingIndex > 0) playSong(playingIndex - 1);
+};
+
+$("nextTrack").onclick = function () {
+  if (playingIndex + 1 < songs.length) playSong(playingIndex + 1);
 };
 
 $("seek").addEventListener("input", function () {
