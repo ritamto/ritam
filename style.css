@@ -230,3 +230,54 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; }
   font-size: 1.05rem;
   line-height: 1.6;
 }
+
+/* ---------- Jukebox ---------- */
+.lime { background: #b8f26b; }
+
+.row input[type=text] { flex: 1; min-width: 200px; width: auto; }
+
+.chip {
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  padding: .3rem .85rem;
+  font-size: .95rem;
+}
+.chip:hover { background: var(--ink); color: var(--paper); filter: none; }
+
+.tracks {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: .5rem;
+  max-height: 320px;      /* scrolls if there are many results */
+  overflow-y: auto;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  width: 100%;
+  text-align: left;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 14px;
+  padding: .5rem .75rem;
+}
+.track img { border-radius: 8px; flex: none; }
+.track[aria-current=true] { outline: 3px solid var(--ink); }
+
+.now {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+  background: var(--paper);
+  border-radius: 16px;
+  padding: .75rem;
+}
+.now[hidden] { display: none; }   /* needed because .now sets display:flex */
+.now img { border-radius: 10px; }
+.now-text { display: flex; flex-direction: column; min-width: 140px; flex: 1; }
+.now input[type=range] { flex: 2; min-width: 140px; accent-color: var(--ink); }

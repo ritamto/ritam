@@ -118,6 +118,43 @@
       </div>
     </section>
 
+        <!-- ===== 8. JUKEBOX ===== -->
+    <section class="tile wide lime">
+      <h2>Jukebox</h2>
+      <p class="hint">Search any song or artist and play a 30-second preview.</p>
+
+      <div class="row">
+        <input type="text" id="musicSearch" placeholder="Try an artist or a song" aria-label="Search music">
+        <button id="musicGo">Search</button>
+      </div>
+
+      <!-- quick picks: click one to search it -->
+      <div class="row">
+        <button class="chip" data-q="old hindi classics">Old Hindi classics</button>
+        <button class="chip" data-q="jazz">Jazz</button>
+        <button class="chip" data-q="classical piano">Classical piano</button>
+        <button class="chip" data-q="lofi beats">Lo-fi</button>
+        <button class="chip" data-q="90s hits">90s hits</button>
+      </div>
+
+      <p class="small" id="musicStatus" role="status"></p>
+      <ul class="tracks" id="tracks"></ul>
+
+      <!-- the player bar (hidden until you pick a song) -->
+      <div class="now" id="now" hidden>
+        <img id="nowArt" alt="" width="56" height="56">
+        <div class="now-text">
+          <b id="nowTitle"></b>
+          <span class="small" id="nowArtist"></span>
+        </div>
+        <button id="playPause">Play</button>
+        <input type="range" id="seek" min="0" max="100" value="0" aria-label="Seek">
+        <span class="small" id="nowTime">0:00</span>
+      </div>
+
+      <audio id="audio"></audio>
+      <p class="small">Previews and artwork come from Apple's iTunes Search.</p>
+    </section>
 
   </main>
 

@@ -544,3 +544,133 @@ $("clearNotes").onclick = function () {
   // Runs in addition to the Decider's own "Flip a coin" code, so you don't need to change that
   $("flip").addEventListener("click", flipFavicon);
 })();
+
+/* =====================================================
+   8. JUKEBOX
+   Searches Apple's free iTunes Search service and plays
+   the 30-second previews it returns.
+   ===================================================== */
+var audio = $("audio");
+var songs = [];           // the current search results
+var playingIndex = -1;    // which result is playing
+
+function say(message) { $("musicStatus").textContent = message; }
+
+function mmss(seconds) {
+  if (!isFinite(seconds)) return "0:00";
+  var m = Math.floor(seconds / 60);
+  var s = Math.floor(seconds % 60);
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+// Ask the service for songs matching what was typed
+function searchMusic(query) {
+  query = query.trim();
+  if (!query) { say("Type an artist or a song first."); return; }
+  say("Searching...");
+
+  var url = "https://itunes.apple.com/search?media=music&entity=song&limit=15&term=" + encodeURIComponent(query);
+
+  fetch(url)
+    .then(function (response) {
+      if (!response.ok) throw new Error("bad response");
+      return response.json();
+    })
+    .then(function (data) {
+      songs = data.results.filter(function (r) { return r.previewUrl; });
+      showSongs();
+      say(songs.length ? songs.length + " songs found. Click one to play." : "Nothing found. Try another search.");
+    })
+    .catch(function () {
+      say("Couldn't reach the music service. Check your connection and try again.");
+    });
+}
+
+// Build the list of results on the page
+function showSongs() {
+  var list = $("tracks");
+  list.innerHTML = "";
+  playingIndex = -1;
+
+  songs.forEach(function (song, index) {
+    var item = document.createElement("li");
+    var button = document.createElement("button");
+    button.className = "track";
+
+    var art = document.createElement("img");
+    art.src = song.artworkUrl60;
+    art.alt = "";
+    art.width = 48;
+    art.height = 48;
+
+    var text = document.createElement("span");
+    var title = document.createElement("b");
+    title.textContent = song.trackName;
+    var artist = document.createElement("small");
+    artist.textContent = song.artistName;
+    text.append(title, document.createElement("br"), artist);
+
+    button.append(art, text);
+    button.onclick = function () { playSong(index); };
+    item.appendChild(button);
+    list.appendChild(item);
+  });
+}
+
+// Start playing one result
+function playSong(index) {
+  var song = songs[index];
+  if (!song) return;
+  playingIndex = index;
+
+  audio.src = song.previewUrl;
+  audio.play().catch(function () {
+    say("Your browser blocked playback. Press Play.");
+  });
+
+  $("nowArt").src = song.artworkUrl100;
+  $("nowTitle").textContent = song.trackName;
+  $("nowArtist").textContent = song.artistName;
+  $("now").hidden = false;
+
+  // outline the song that is playing
+  var buttons = $("tracks").querySelectorAll(".track");
+  buttons.forEach(function (b, i) {
+    b.setAttribute("aria-current", i === index ? "true" : "false");
+  });
+}
+
+// Player controls
+$("playPause").onclick = function () {
+  if (!audio.src) return;
+  if (audio.paused) audio.play(); else audio.pause();
+};
+
+audio.addEventListener("play", function () { $("playPause").textContent = "Pause"; });
+audio.addEventListener("pause", function () { $("playPause").textContent = "Play"; });
+
+audio.addEventListener("timeupdate", function () {
+  if (audio.duration) $("seek").value = (audio.currentTime / audio.duration) * 100;
+  $("nowTime").textContent = mmss(audio.currentTime);
+});
+
+$("seek").addEventListener("input", function () {
+  if (audio.duration) audio.currentTime = ($("seek").value / 100) * audio.duration;
+});
+
+// When a preview ends, move on to the next song in the list
+audio.addEventListener("ended", function () {
+  if (playingIndex + 1 < songs.length) playSong(playingIndex + 1);
+});
+
+// Search button, Enter key, and the quick-pick chips
+$("musicGo").onclick = function () { searchMusic($("musicSearch").value); };
+$("musicSearch").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") searchMusic($("musicSearch").value);
+});
+document.querySelectorAll("[data-q]").forEach(function (chip) {
+  chip.onclick = function () {
+    $("musicSearch").value = chip.dataset.q;
+    searchMusic(chip.dataset.q);
+  };
+});
