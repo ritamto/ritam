@@ -348,6 +348,9 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; }
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
 .mini-player[hidden] {
   display: none;
@@ -396,4 +399,24 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; }
   width: 100%;
   accent-color: var(--ink);
   cursor: pointer;
+}
+
+.mini-player.dragging {
+  cursor: grabbing;
+}
+.mini-close {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #ff5c5c;
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  line-height: 1;
 }
