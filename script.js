@@ -546,13 +546,67 @@ $("clearNotes").onclick = function () {
 })();
 
 /* =====================================================
-   8. JUKEBOX
-   Searches Apple's free iTunes Search service and plays
-   the 30-second previews it returns.
+   8. JUKEBOX (YouTube Music-Only Full Tracks)
    ===================================================== */
-var audio = $("audio");
+var YT_API_KEY = "AIzaSyBywYmbNu2Fh631pt7BHL_LZEJ3b_om1Us";
+var ytPlayer = null;
+var ytReady = false;
+var progressTimer = null;
 var songs = [];           // the current search results
 var playingIndex = -1;    // which result is playing
+
+// Load YouTube IFrame API script automatically
+var tag = document.createElement("script");
+tag.src = "https://youtube.com";
+document.head.appendChild(tag);
+
+window.onYouTubeIframeAPIReady = function () {
+  ytPlayer = new YT.Player("ytPlayer", {
+    height: "200",
+    width: "200",
+    playerVars: {
+      controls: 0,
+      modestbranding: 1,
+      rel: 0,
+      playsinline: 1
+    },
+    events: {
+      onReady: function () { ytReady = true; },
+      onStateChange: onPlayerStateChange
+    }
+  });
+};
+
+function onPlayerStateChange(event) {
+  // 1 = Playing, 2 = Paused, 0 = Ended
+  if (event.data === YT.PlayerState.PLAYING) {
+    $("playPause").textContent = "Pause";
+    $("dockLabel").textContent = "♪ Playing";
+    startProgressLoop();
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    $("playPause").textContent = "Play";
+    $("dockLabel").textContent = "♪ Jukebox";
+    stopProgressLoop();
+  } else if (event.data === YT.PlayerState.ENDED) {
+    stopProgressLoop();
+    if (playingIndex + 1 < songs.length) playSong(playingIndex + 1);
+  }
+}
+
+function startProgressLoop() {
+  stopProgressLoop();
+  progressTimer = setInterval(function () {
+    if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+    var cur = ytPlayer.getCurrentTime();
+    var dur = ytPlayer.getDuration();
+    if (dur > 0) $("seek").value = (cur / dur) * 100;
+    $("nowTime").textContent = mmss(cur);
+  }, 500);
+}
+
+function stopProgressLoop() {
+  clearInterval(progressTimer);
+}
 
 function say(message) { $("musicStatus").textContent = message; }
 
@@ -563,13 +617,16 @@ function mmss(seconds) {
   return m + ":" + (s < 10 ? "0" : "") + s;
 }
 
-// Ask the service for songs matching what was typed
+// Search YouTube strictly for Music (videoCategoryId=10)
 function searchMusic(query) {
   query = query.trim();
   if (!query) { say("Type an artist or a song first."); return; }
   say("Searching...");
 
-  var url = "https://itunes.apple.com/search?media=music&entity=song&limit=15&term=" + encodeURIComponent(query);
+  var url = "https://googleapis.com"
+    + "?part=snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=12"
+    + "&q=" + encodeURIComponent(query + " official audio")
+    + "&key=" + YT_API_KEY;
 
   fetch(url)
     .then(function (response) {
@@ -577,12 +634,22 @@ function searchMusic(query) {
       return response.json();
     })
     .then(function (data) {
-      songs = data.results.filter(function (r) { return r.previewUrl; });
+      songs = (data.items || []).map(function (item) {
+        // Decode HTML entities like &amp; in YouTube titles
+        var txt = document.createElement("textarea");
+        txt.innerHTML = item.snippet.title;
+        return {
+          videoId: item.id.videoId,
+          trackName: txt.value,
+          artistName: item.snippet.channelTitle.replace(" - Topic", ""),
+          artworkUrl: item.snippet.thumbnails.default.url
+        };
+      });
       showSongs();
-      say(songs.length ? songs.length + " songs found. Click one to play." : "Nothing found. Try another search.");
+      say(songs.length ? songs.length + " tracks found. Click one to play." : "Nothing found. Try another search.");
     })
     .catch(function () {
-      say("Couldn't reach the music service. Check your connection and try again.");
+      say("Couldn't reach YouTube. Check your API key or connection.");
     });
 }
 
@@ -598,7 +665,7 @@ function showSongs() {
     button.className = "track";
 
     var art = document.createElement("img");
-    art.src = song.artworkUrl60;
+    art.src = song.artworkUrl;
     art.alt = "";
     art.width = 48;
     art.height = 48;
@@ -620,20 +687,17 @@ function showSongs() {
 // Start playing one result
 function playSong(index) {
   var song = songs[index];
-  if (!song) return;
+  if (!song || !ytReady) return;
   playingIndex = index;
 
-  audio.src = song.previewUrl;
-  audio.play().catch(function () {
-    say("Your browser blocked playback. Press Play.");
-  });
+  ytPlayer.loadVideoById(song.videoId);
 
-  $("nowArt").src = song.artworkUrl100;
   $("nowTitle").textContent = song.trackName;
   $("nowArtist").textContent = song.artistName;
+  $("seek").value = 0;
+  $("nowTime").textContent = "0:00";
   $("now").hidden = false;
 
-  // outline the song that is playing
   var buttons = $("tracks").querySelectorAll(".track");
   buttons.forEach(function (b, i) {
     b.setAttribute("aria-current", i === index ? "true" : "false");
@@ -642,25 +706,19 @@ function playSong(index) {
 
 // Player controls
 $("playPause").onclick = function () {
-  if (!audio.src) return;
-  if (audio.paused) audio.play(); else audio.pause();
+  if (!ytReady || playingIndex === -1) return;
+  var state = ytPlayer.getPlayerState();
+  if (state === YT.PlayerState.PLAYING) {
+    ytPlayer.pauseVideo();
+  } else {
+    ytPlayer.playVideo();
+  }
 };
 
-audio.addEventListener("play", function () { $("playPause").textContent = "Pause"; });
-audio.addEventListener("pause", function () { $("playPause").textContent = "Play"; });
-
-audio.addEventListener("timeupdate", function () {
-  if (audio.duration) $("seek").value = (audio.currentTime / audio.duration) * 100;
-  $("nowTime").textContent = mmss(audio.currentTime);
-});
-
 $("seek").addEventListener("input", function () {
-  if (audio.duration) audio.currentTime = ($("seek").value / 100) * audio.duration;
-});
-
-// When a preview ends, move on to the next song in the list
-audio.addEventListener("ended", function () {
-  if (playingIndex + 1 < songs.length) playSong(playingIndex + 1);
+  if (!ytReady || !ytPlayer.getDuration) return;
+  var dur = ytPlayer.getDuration();
+  if (dur > 0) ytPlayer.seekTo(($("seek").value / 100) * dur, true);
 });
 
 // Search button, Enter key, and the quick-pick chips
@@ -684,7 +742,3 @@ $("dockTab").onclick = function () {
   var open = dock.classList.toggle("open");
   $("dockTab").setAttribute("aria-expanded", open ? "true" : "false");
 };
-
-// The tab says "Playing" while music is on, even when the panel is closed
-audio.addEventListener("play", function () { $("dockLabel").textContent = "♪ Playing"; });
-audio.addEventListener("pause", function () { $("dockLabel").textContent = "♪ Jukebox"; });

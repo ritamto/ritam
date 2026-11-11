@@ -126,46 +126,58 @@
     Say hello: <a href="mailto:hello@ritammisra.com">hello@ritammisra.com</a>
   </footer>
 
-    <!-- ===== JUKEBOX (docked on the right edge) ===== -->
-  <aside class="dock" id="dock" aria-label="Jukebox">
-    <button class="dock-tab" id="dockTab" aria-expanded="false" aria-controls="dockBody">
-      <span id="dockLabel">♪ Jukebox</span>
-    </button>
+   <!-- =====================================================
+     JUKEBOX DOCK (Side Panel)
+     ===================================================== -->
+<aside id="dock" class="dock" aria-label="Jukebox">
+  <button id="dockTab" class="dock-tab" aria-expanded="false" aria-controls="dockBody">
+    <span id="dockLabel">♪ Jukebox</span>
+  </button>
 
-    <div class="dock-body" id="dockBody">
-      <h2>Jukebox</h2>
-      <p class="hint">Search any song or artist and play a 30-second preview.</p>
+  <div id="dockBody" class="dock-body">
+    <h2>Jukebox</h2>
+    <p class="hint">Search any song or artist and play the full track.</p>
 
-      <div class="row">
-        <input type="text" id="musicSearch" placeholder="Artist or song" aria-label="Search music">
-        <button id="musicGo">Search</button>
-      </div>
-
-      <div class="row">
-        <button class="chip" data-q="rock">Rock</button>
-        <button class="chip" data-q="jazz">Jazz</button>
-        <button class="chip" data-q="classical piano">Piano</button>
-        <button class="chip" data-q="lofi beats">Lo-fi</button>
-      </div>
-
-      <p class="small" id="musicStatus" role="status"></p>
-      <ul class="tracks" id="tracks"></ul>
-
-      <div class="now" id="now" hidden>
-        <img id="nowArt" alt="" width="56" height="56">
-        <div class="now-text">
-          <b id="nowTitle"></b>
-          <span class="small" id="nowArtist"></span>
-        </div>
-        <button id="playPause">Play</button>
-        <input type="range" id="seek" min="0" max="100" value="0" aria-label="Seek">
-        <span class="small" id="nowTime">0:00</span>
-      </div>
-
-      <audio id="audio"></audio>
-      <p class="small">Previews and artwork from Apple's iTunes Search.</p>
+    <!-- Search Input -->
+    <div class="row">
+      <input id="musicSearch" type="text" placeholder="Song or artist..." aria-label="Search music">
+      <button id="musicGo" type="button">Search</button>
     </div>
-  </aside>
+
+    <!-- Quick-Pick Genre Chips -->
+    <div class="row">
+      <button class="chip" type="button" data-q="Rock">Rock</button>
+      <button class="chip" type="button" data-q="Jazz">Jazz</button>
+      <button class="chip" type="button" data-q="Piano">Piano</button>
+      <button class="chip" type="button" data-q="Lo-fi">Lo-fi</button>
+    </div>
+
+    <!-- Status Line -->
+    <p id="musicStatus" class="small" role="status"></p>
+
+    <!-- Search Results List -->
+    <ul id="tracks" class="tracks"></ul>
+
+    <!-- Active Track Player -->
+    <div id="now" class="now" hidden>
+      <div class="yt-box">
+        <div id="ytPlayer"></div>
+      </div>
+
+      <div class="now-text">
+        <b id="nowTitle">Track Title</b>
+        <small id="nowArtist">Artist</small>
+      </div>
+
+      <div class="row" style="width: 100%;">
+        <button id="playPause" type="button">Play</button>
+        <input id="seek" type="range" min="0" max="100" value="0" aria-label="Seek">
+        <span id="nowTime" class="small">0:00</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
 
   <!-- All the behaviour lives in this file -->
   <script src="script.js"></script>
