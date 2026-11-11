@@ -572,7 +572,14 @@ window.onYouTubeIframeAPIReady = function () {
     },
     events: {
       onReady: function () { ytReady = true; },
-      onStateChange: onPlayerStateChange
+      onStateChange: onPlayerStateChange,
+      onError: function (event) {
+        if (event.data !== 101 && event.data !== 150) return;
+        say("Track restricted by label, skipping...");
+        if (playingIndex + 1 < songs.length) {
+          playSong(playingIndex + 1);
+        }
+      }
     }
   });
 };
@@ -645,8 +652,11 @@ function searchMusic(query) {
           videoId: item.id.videoId,
           trackName: cleanTitle(item.snippet.title),
           artistName: item.snippet.channelTitle.replace(" - Topic", ""),
+          channelTitle: item.snippet.channelTitle,
           artworkUrl: item.snippet.thumbnails.default.url
         };
+      }).sort(function (a, b) {
+        return Number(b.channelTitle.endsWith(" - Topic")) - Number(a.channelTitle.endsWith(" - Topic"));
       });
       showSongs();
       say(songs.length ? songs.length + " tracks found. Click one to play." : "Nothing found. Try another search.");
