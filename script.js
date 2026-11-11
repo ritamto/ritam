@@ -623,15 +623,15 @@ function cleanTitle(raw) {
   return txt.value.replace(/\s*[\(\[](official|audio|video|lyrics|visualizer|hd|4k).*?[\)\]]/gi, "").trim();
 }
 
-// Search YouTube strictly for Music (videoCategoryId=10)
+// Search YouTube for embeddable videos
 function searchMusic(query) {
   query = query.trim();
   if (!query) { say("Type an artist or a song first."); return; }
   say("Searching...");
 
   var url = "https://www.googleapis.com/youtube/v3/search"
-    + "?part=snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=12"
-    + "&q=" + encodeURIComponent(query + " official audio")
+    + "?part=snippet&type=video&videoEmbeddable=true&maxResults=12"
+    + "&q=" + encodeURIComponent(query)
     + "&key=" + YT_API_KEY;
 
   fetch(url)
