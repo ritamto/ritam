@@ -629,7 +629,7 @@ function searchMusic(query) {
   if (!query) { say("Type an artist or a song first."); return; }
   say("Searching...");
 
-  var url = "https://googleapis.com" + "youtube/v3/search"
+  var url = "https://googleapis.com" + "/youtube/v3/search"
     + "?part=snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=12"
     + "&q=" + encodeURIComponent(query + " official audio")
     + "&key=" + YT_API_KEY;
