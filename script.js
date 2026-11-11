@@ -557,7 +557,7 @@ var playingIndex = -1;    // which result is playing
 
 // Load YouTube IFrame API script automatically
 var tag = document.createElement("script");
-tag.src = "https://youtube.com";
+tag.src = "https://youtube.com" + "iframe_api";
 document.head.appendChild(tag);
 
 window.onYouTubeIframeAPIReady = function () {
@@ -623,8 +623,10 @@ function searchMusic(query) {
   if (!query) { say("Type an artist or a song first."); return; }
   say("Searching...");
 
- var url = "https://googleapis.com" + encodeURIComponent(query + " official audio") + "&key=" + YT_API_KEY;
-
+  var url = "https://googleapis.com" + "youtube/v3/search"
+    + "?part=snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=12"
+    + "&q=" + encodeURIComponent(query + " official audio")
+    + "&key=" + YT_API_KEY;
 
   fetch(url)
     .then(function (response) {
