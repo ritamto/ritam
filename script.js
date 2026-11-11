@@ -345,3 +345,75 @@ $("pick").onclick = function () {
 $("flip").onclick = function () {
   $("result").textContent = Math.random() < 0.5 ? "Heads" : "Tails";
 };
+
+/* =====================================================
+   ANIMATED FAVICON (a coin that flips every few seconds)
+   Draws the coin on a hidden canvas and swaps it into the tab icon.
+   ===================================================== */
+(function () {
+  var link = document.getElementById("favicon");
+  if (!link || reduceMotion) return;   // skip if missing, or if the visitor turned animations off
+
+  var canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  var pen = canvas.getContext("2d");
+
+  // The same R shape as in favicon.svg
+  var letterR = new Path2D(
+    "M16 12H38C48 12 52 18 52 25C52 31 48 35 42 36L53 52H40L31 37H28V52H16Z" +
+    "M28 22V30H37C40 30 41 28 41 26C41 24 40 22 37 22Z"
+  );
+
+  // Draw the coin squashed sideways by "squash" (1 = full width, 0.06 = edge-on)
+  function drawCoin(squash) {
+    pen.clearRect(0, 0, 64, 64);
+    pen.save();
+    pen.translate(32, 32);
+    pen.scale(squash, 1);
+
+    // gold coin with a dark rim
+    pen.beginPath();
+    pen.arc(0, 0, 29, 0, Math.PI * 2);
+    pen.fillStyle = "#ffd84d";
+    pen.fill();
+    pen.lineWidth = 4;
+    pen.strokeStyle = "#1d1230";
+    pen.stroke();
+
+    // dotted inner ring
+    pen.beginPath();
+    pen.arc(0, 0, 22, 0, Math.PI * 2);
+    pen.lineWidth = 2;
+    pen.setLineDash([3, 3]);
+    pen.stroke();
+    pen.setLineDash([]);
+
+    // the tilted R
+    pen.rotate(-5 * Math.PI / 180);
+    pen.scale(0.62, 0.62);
+    pen.translate(-34.5, -32);
+    pen.fillStyle = "#1d1230";
+    pen.fill(letterR, "evenodd");
+
+    pen.restore();
+  }
+
+  var cycle = 3500;   // one flip every 3.5 seconds
+  var lastSquash = -1;
+
+  setInterval(function () {
+    var p = (Date.now() % cycle) / cycle;       // 0 to 1 through the cycle
+    var squash = 1;                             // resting: full coin
+    if (p >= 0.6 && p < 0.8) squash = 1 - ((p - 0.6) / 0.2) * 0.94;   // flipping to edge
+    if (p >= 0.8) squash = 0.06 + ((p - 0.8) / 0.2) * 0.94;           // flipping back
+
+    squash = Math.round(squash * 20) / 20;      // only redraw when it visibly changes
+    if (squash === lastSquash) return;
+    lastSquash = squash;
+
+    drawCoin(squash);
+    link.type = "image/png";
+    link.href = canvas.toDataURL("image/png");
+  }, 80);
+})();
