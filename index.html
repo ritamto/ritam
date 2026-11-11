@@ -1,321 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ritam's Workshop</title>
-<meta name="description" content="A small collection of toys and tools you can use right now.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --plum: #1d1230;
-    --plum2: #2b1a47;
-    --mint: #7ff0c8;
-    --sun: #ffd84d;
-    --pink: #ff8fb7;
-    --sky: #7cc0ff;
-    --lilac: #c1a8ff;
-    --ink: #1d1230;
-    --paper: #f6f3ff;
-    color-scheme: dark;
-  }
-  * { box-sizing: border-box; margin: 0; }
-  body {
-    background: var(--plum);
-    background-image: radial-gradient(90% 60% at 10% -10%, var(--plum2), transparent);
-    color: var(--paper);
-    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-    font-size: 1.05rem;
-    line-height: 1.5;
-    padding: clamp(1rem, 4vw, 3rem);
-    padding-top: max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-top, 0px));
-    padding-bottom: max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-bottom, 0px));
-  }
-  header { max-width: 1200px; margin: 0 auto 2.5rem; }
-  h1 {
-    font-family: "Unbounded", "Arial Black", system-ui, sans-serif;
-    font-weight: 800;
-    font-size: clamp(2.4rem, 8vw, 5.5rem);
-    line-height: 1;
-    letter-spacing: -.03em;
-  }
-  header p { margin-top: 1rem; max-width: 36rem; color: #cbbfe6; }
-  .grid {
-    max-width: 1200px; margin: 0 auto;
-    display: grid; gap: 1.25rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
-  }
-  .tile {
-    color: var(--ink);
-    border-radius: 24px;
-    padding: 1.25rem;
-    display: flex; flex-direction: column; gap: .9rem;
-    min-height: 340px;
-  }
-  .tile h2 {
-    font-family: "Unbounded", system-ui, sans-serif;
-    font-weight: 500; font-size: 1.15rem; letter-spacing: -.01em;
-  }
-  .tile .hint { font-size: .95rem; opacity: .8; margin-top: -.5rem; }
-  .mint { background: var(--mint); } .sun { background: var(--sun); }
-  .pink { background: var(--pink); } .sky { background: var(--sky); }
-  .lilac { background: var(--lilac); }
-  .wide { grid-column: 1 / -1; }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ritam's Workshop</title>
+  <meta name="description" content="A few small toys you can play with right now.">
 
-  button, .btn {
-    font: inherit; font-weight: 600; color: var(--paper);
-    background: var(--ink); border: 0; border-radius: 999px;
-    padding: .55rem 1.1rem; cursor: pointer;
-  }
-  button:hover { filter: brightness(1.25); }
-  button:active { transform: translateY(1px); }
-  button:focus-visible, textarea:focus-visible, input:focus-visible, [role=button]:focus-visible {
-    outline: 3px solid var(--ink); outline-offset: 3px;
-  }
-  .row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-  .stat { font-family: "Unbounded", system-ui, sans-serif; font-weight: 800; font-size: 2.2rem; line-height: 1; }
-  .small { font-size: .9rem; opacity: .8; }
+  <!-- Fonts (optional, the page still works without them) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
 
-  /* doodle */
-  canvas { width: 100%; background: var(--paper); border-radius: 16px; touch-action: none; cursor: crosshair; display: block; }
-  .sw { width: 28px; height: 28px; padding: 0; border: 3px solid transparent; border-radius: 50%; }
-  .sw[aria-pressed=true] { border-color: var(--paper); box-shadow: 0 0 0 2px var(--ink); }
-
-  /* reaction */
-  #pad {
-    flex: 1; min-height: 160px; border-radius: 16px; display: grid; place-items: center;
-    text-align: center; padding: 1rem; font-weight: 600; font-size: 1.15rem;
-    background: var(--ink); color: var(--paper); cursor: pointer; user-select: none;
-  }
-  #pad.wait { background: #b3261e; }
-  #pad.go { background: #0f9d58; }
-
-  /* typing */
-  #target { font-size: 1.15rem; line-height: 1.7; background: var(--paper); border-radius: 16px; padding: .9rem 1rem; }
-  #target .ok { color: #0a7a45; } #target .bad { background: #ffb3b3; color: #7a0a0a; } #target .rest { opacity: .55; }
-  input[type=text], textarea {
-    font: inherit; width: 100%; border: 3px solid var(--ink); background: var(--paper);
-    color: var(--ink); border-radius: 14px; padding: .6rem .8rem;
-  }
-  textarea { resize: vertical; min-height: 84px; }
-
-  /* decider */
-  #pick { font-family: "Unbounded", system-ui, sans-serif; font-weight: 800; font-size: 1.8rem; min-height: 2.6rem; overflow-wrap: anywhere; }
-
-  footer { max-width: 1200px; margin: 2.5rem auto 0; color: #a898c8; font-size: .95rem; }
-</style>
+  <!-- All the looks live in this file -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>Ritam's<br>Workshop</h1>
-  <p>Five small things you can use right now. Draw something, test your reflexes, race a sentence, start a timer, or let a coin decide.</p>
-</header>
+  <!-- ===== TOP OF THE PAGE ===== -->
+  <header>
+    <p class="clock" id="now"></p>
+    <h1>Ritam's<br>Workshop</h1>
+    <p>A little corner of the internet where I keep a few toys. Doodle something, see how fast you can click, race a sentence, set a timer, or let a coin make your mind up for you.</p>
+  </header>
 
-<main class="grid">
+  <main class="grid">
 
-  <section class="tile wide pink" aria-labelledby="t1">
-    <h2 id="t1">Doodle pad</h2>
-    <canvas id="cv" width="1000" height="420" aria-label="Drawing canvas"></canvas>
-    <div class="row" id="swatches"></div>
-    <div class="row">
-      <button id="undo">Undo</button>
-      <button id="clr">Clear</button>
-      <button id="save">Save as image</button>
-    </div>
-  </section>
+    <!-- ===== 1. DOODLE PAD ===== -->
+    <section class="tile wide pink">
+      <h2>Doodle pad</h2>
+      <canvas id="canvas" width="1000" height="420" aria-label="Drawing canvas"></canvas>
+      <div class="row" id="swatches"></div>
+      <div class="row">
+        <button id="undo">Undo</button>
+        <button id="clear">Clear</button>
+        <button id="save">Save as image</button>
+      </div>
+    </section>
 
-  <section class="tile mint" aria-labelledby="t2">
-    <h2 id="t2">Reaction test</h2>
-    <p class="hint">Click when the pad turns green.</p>
-    <div id="pad" role="button" tabindex="0">Click to start</div>
-    <div class="row"><span class="stat" id="ms">--</span><span class="small">ms &nbsp;|&nbsp; best <b id="best1">--</b></span></div>
-  </section>
+    <!-- ===== 2. REACTION TEST ===== -->
+    <section class="tile mint">
+      <h2>Reaction test</h2>
+      <p class="hint">Wait for the box to turn green, then click as fast as you can.</p>
+      <div id="pad" role="button" tabindex="0">Click to start</div>
+      <div class="row">
+        <span class="stat" id="reactionTime">--</span>
+        <span class="small">ms &nbsp;|&nbsp; best: <b id="reactionBest">--</b></span>
+      </div>
+    </section>
 
-  <section class="tile sun" aria-labelledby="t3">
-    <h2 id="t3">Typing sprint</h2>
-    <p class="hint">Type the sentence. The clock starts on your first key.</p>
-    <div id="target" aria-live="off"></div>
-    <input type="text" id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type here">
-    <div class="row"><span class="stat" id="wpm">--</span><span class="small">wpm &nbsp;|&nbsp; best <b id="best2">--</b></span></div>
-    <div class="row"><button id="newtext">New sentence</button></div>
-  </section>
+    <!-- ===== 3. TYPING SPRINT ===== -->
+    <section class="tile sun">
+      <h2>Typing sprint</h2>
+      <p class="hint">Type the line below. Your timer starts when you press the first key.</p>
+      <div id="target"></div>
+      <input type="text" id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type here">
+      <p class="small" id="source"></p>
+      <div class="row">
+        <span class="stat" id="wpm">--</span>
+        <span class="small">words per minute &nbsp;|&nbsp; best: <b id="wpmBest">--</b></span>
+      </div>
+      <div class="row"><button id="newLine">Another one</button></div>
+    </section>
 
-  <section class="tile sky" aria-labelledby="t4">
-    <h2 id="t4">Focus timer</h2>
-    <p class="hint">Work in short bursts, then rest.</p>
-    <div class="row"><button data-m="25">Focus 25</button><button data-m="5">Break 5</button><button data-m="50">Deep 50</button></div>
-    <div class="stat" id="clock" style="font-size:3.4rem">25:00</div>
-    <div class="row"><button id="go">Start</button><button id="rs">Reset</button></div>
-    <div class="small" id="done" role="status"></div>
-  </section>
+    <!-- ===== 4. FOCUS TIMER ===== -->
+    <section class="tile sky">
+      <h2>Focus timer</h2>
+      <p class="hint">Pick a length, hit start, and get on with it.</p>
+      <div class="row">
+        <button data-minutes="25">Focus 25</button>
+        <button data-minutes="5">Break 5</button>
+        <button data-minutes="50">Deep 50</button>
+      </div>
+      <div class="stat big" id="clock">25:00</div>
+      <div class="row">
+        <button id="start">Start</button>
+        <button id="reset">Reset</button>
+      </div>
+      <div class="small" id="timerMessage" role="status"></div>
+    </section>
 
-  <section class="tile lilac" aria-labelledby="t5">
-    <h2 id="t5">Decider</h2>
-    <p class="hint">One option per line or comma separated.</p>
-    <textarea id="opts" aria-label="Options">Pizza, Pasta, Tacos</textarea>
-    <div class="row"><button id="spin">Pick one</button><button id="flip">Flip a coin</button></div>
-    <div id="pick" role="status" aria-live="polite">...</div>
-  </section>
+    <!-- ===== 5. DECIDER ===== -->
+    <section class="tile lilac">
+      <h2>Decider</h2>
+      <p class="hint">Type your options, one per line or separated by commas.</p>
+      <textarea id="options" aria-label="Options">Pizza, Pasta, Tacos</textarea>
+      <div class="row">
+        <button id="pick">Pick one</button>
+        <button id="flip">Flip a coin</button>
+      </div>
+      <div id="result" role="status" aria-live="polite">...</div>
+    </section>
 
-</main>
+  </main>
 
-<footer>ritammisra.com &nbsp;|&nbsp; claimed November 11, 2026</footer>
+  <!-- ===== BOTTOM OF THE PAGE ===== -->
+  <footer>
+    Say hello: <a href="mailto:hello@ritammisra.com">hello@ritammisra.com</a>
+  </footer>
 
-<script>
-(function () {
-  var $ = function (id) { return document.getElementById(id); };
-  var store = {
-    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  };
-  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ---------- Doodle pad ---------- */
-  var cv = $('cv'), ctx = cv.getContext('2d');
-  var colors = ['#1d1230', '#e5383b', '#ff8c00', '#1b9e5a', '#1f6feb', '#8e44ad', '#ffffff'];
-  var color = colors[0], size = 6, drawing = false, strokes = [], cur = null;
-  var sw = $('swatches');
-  colors.forEach(function (c, i) {
-    var b = document.createElement('button');
-    b.className = 'sw'; b.style.background = c; b.setAttribute('aria-label', 'Colour ' + (i + 1));
-    b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
-    b.onclick = function () {
-      color = c;
-      Array.prototype.forEach.call(sw.children, function (x) { x.setAttribute('aria-pressed', 'false'); });
-      b.setAttribute('aria-pressed', 'true');
-    };
-    sw.appendChild(b);
-  });
-  function pt(e) {
-    var r = cv.getBoundingClientRect();
-    return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height };
-  }
-  function redraw() {
-    ctx.fillStyle = '#f6f3ff'; ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    strokes.forEach(function (s) {
-      ctx.strokeStyle = s.c; ctx.lineWidth = s.w; ctx.beginPath();
-      s.p.forEach(function (p, i) { i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
-      if (s.p.length === 1) ctx.lineTo(s.p[0].x + .1, s.p[0].y);
-      ctx.stroke();
-    });
-  }
-  cv.addEventListener('pointerdown', function (e) {
-    drawing = true; cv.setPointerCapture(e.pointerId);
-    cur = { c: color, w: size, p: [pt(e)] }; strokes.push(cur); redraw();
-  });
-  cv.addEventListener('pointermove', function (e) { if (drawing) { cur.p.push(pt(e)); redraw(); } });
-  ['pointerup', 'pointercancel'].forEach(function (n) { cv.addEventListener(n, function () { drawing = false; }); });
-  $('undo').onclick = function () { strokes.pop(); redraw(); };
-  $('clr').onclick = function () { strokes = []; redraw(); };
-  $('save').onclick = function () {
-    var a = document.createElement('a'); a.download = 'doodle.png'; a.href = cv.toDataURL('image/png'); a.click();
-  };
-  redraw();
-
-  /* ---------- Reaction test ---------- */
-  var pad = $('pad'), rs = 'idle', t0 = 0, tm;
-  var b1 = parseInt(store.get('rt-best'), 10);
-  if (b1) $('best1').textContent = b1 + ' ms';
-  function padAct() {
-    if (rs === 'idle') {
-      rs = 'wait'; pad.className = 'wait'; pad.textContent = 'Wait for green...';
-      tm = setTimeout(function () { rs = 'go'; pad.className = 'go'; pad.textContent = 'Click now!'; t0 = performance.now(); }, 1500 + Math.random() * 2500);
-    } else if (rs === 'wait') {
-      clearTimeout(tm); rs = 'idle'; pad.className = ''; pad.textContent = 'Too soon. Click to try again';
-    } else {
-      var ms = Math.round(performance.now() - t0);
-      $('ms').textContent = ms; rs = 'idle'; pad.className = ''; pad.textContent = 'Click to go again';
-      if (!b1 || ms < b1) { b1 = ms; store.set('rt-best', ms); $('best1').textContent = ms + ' ms'; }
-    }
-  }
-  pad.addEventListener('pointerdown', padAct);
-  pad.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); padAct(); } });
-
-  /* ---------- Typing sprint ---------- */
-  var lines = [
-    'A quiet domain is just a blank page waiting for someone curious.',
-    'Small projects ship faster than big plans ever will.',
-    'The best way to learn something is to build a tiny version of it.',
-    'Good ideas rarely arrive on schedule, so keep a notebook close.',
-    'Make it work, make it clear, and only then make it fast.'
-  ];
-  var target = '', start = 0, li = -1, typed = $('typed');
-  var b2 = parseInt(store.get('wpm-best'), 10);
-  if (b2) $('best2').textContent = b2;
-  function render(v) {
-    var h = '';
-    for (var i = 0; i < target.length; i++) {
-      var ch = target[i].replace('&', '&amp;').replace('<', '&lt;');
-      if (i < v.length) h += '<span class="' + (v[i] === target[i] ? 'ok' : 'bad') + '">' + ch + '</span>';
-      else h += '<span class="rest">' + ch + '</span>';
-    }
-    $('target').innerHTML = h;
-  }
-  function newLine() {
-    var n; do { n = Math.floor(Math.random() * lines.length); } while (n === li && lines.length > 1);
-    li = n; target = lines[n]; start = 0; typed.value = ''; typed.disabled = false; render('');
-  }
-  typed.addEventListener('input', function () {
-    var v = typed.value;
-    if (!start && v.length) start = performance.now();
-    render(v);
-    if (v === target) {
-      var mins = (performance.now() - start) / 60000;
-      var w = Math.round((target.length / 5) / mins);
-      $('wpm').textContent = w; typed.disabled = true;
-      if (!b2 || w > b2) { b2 = w; store.set('wpm-best', w); $('best2').textContent = w; }
-    }
-  });
-  $('newtext').onclick = function () { newLine(); typed.focus(); };
-  newLine();
-
-  /* ---------- Focus timer ---------- */
-  var mins = 25, left = 25 * 60, endAt = 0, iv = null;
-  function fmt(s) { var m = Math.floor(s / 60), x = s % 60; return (m < 10 ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x; }
-  function show() { $('clock').textContent = fmt(left); document.title = iv ? fmt(left) + ' | Workshop' : "Ritam's Workshop"; }
-  function beep() {
-    try {
-      var a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain();
-      o.connect(g); g.connect(a.destination); o.frequency.value = 660; g.gain.value = .15;
-      o.start(); o.stop(a.currentTime + .6);
-    } catch (e) {}
-  }
-  function stop() { clearInterval(iv); iv = null; $('go').textContent = 'Start'; }
-  document.querySelectorAll('[data-m]').forEach(function (b) {
-    b.onclick = function () { stop(); mins = +b.dataset.m; left = mins * 60; $('done').textContent = ''; show(); };
-  });
-  $('go').onclick = function () {
-    if (iv) { stop(); show(); return; }
-    endAt = Date.now() + left * 1000; $('done').textContent = ''; $('go').textContent = 'Pause';
-    iv = setInterval(function () {
-      left = Math.max(0, Math.round((endAt - Date.now()) / 1000)); show();
-      if (left === 0) { stop(); beep(); $('done').textContent = 'Time is up. Take a breath.'; show(); }
-    }, 250);
-  };
-  $('rs').onclick = function () { stop(); left = mins * 60; $('done').textContent = ''; show(); };
-
-  /* ---------- Decider ---------- */
-  function options() {
-    return $('opts').value.split(/[\n,]+/).map(function (s) { return s.trim(); }).filter(Boolean);
-  }
-  $('spin').onclick = function () {
-    var o = options(), out = $('pick');
-    if (o.length < 2) { out.textContent = 'Add at least two options.'; return; }
-    var final = o[Math.floor(Math.random() * o.length)];
-    if (still) { out.textContent = final; return; }
-    var n = 0, total = 18;
-    (function step() {
-      n++;
-      out.textContent = n < total ? o[Math.floor(Math.random() * o.length)] : final;
-      if (n < total) setTimeout(step, 50 + n * n * 1.2);
-    })();
-  };
-  $('flip').onclick = function () { $('pick').textContent = Math.random() < .5 ? 'Heads' : 'Tails'; };
-})();
-</script>
+  <!-- All the behaviour lives in this file -->
+  <script src="script.js"></script>
 </body>
 </html>
