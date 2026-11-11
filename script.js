@@ -630,7 +630,17 @@ function cleanTitle(raw) {
   return txt.value.replace(/\s*[\(\[](official|audio|video|lyrics|visualizer|hd|4k).*?[\)\]]/gi, "").trim();
 }
 
-// Search YouTube for embeddable videos
+// Convert a YouTube ISO 8601 duration to seconds
+function durationInSeconds(duration) {
+  var match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(duration || "");
+  if (!match) return 0;
+  return (Number(match[1]) || 0) * 86400
+    + (Number(match[2]) || 0) * 3600
+    + (Number(match[3]) || 0) * 60
+    + (Number(match[4]) || 0);
+}
+
+// Search YouTube for embeddable full-length videos
 function searchMusic(query) {
   query = query.trim();
   if (!query) { say("Type an artist or a song first."); return; }
@@ -647,16 +657,37 @@ function searchMusic(query) {
       return response.json();
     })
     .then(function (data) {
-      songs = (data.items || []).map(function (item) {
+      var ids = (data.items || []).map(function (item) {
+        return item.id.videoId;
+      }).filter(Boolean);
+      if (!ids.length) return [];
+
+      var videosUrl = "https://www.googleapis.com/youtube/v3/videos"
+        + "?part=snippet,contentDetails,status&id=" + encodeURIComponent(ids.join(","))
+        + "&key=" + YT_API_KEY;
+
+      return fetch(videosUrl).then(function (response) {
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      }).then(function (videosData) {
+        return videosData.items || [];
+      });
+    })
+    .then(function (items) {
+      songs = items.filter(function (item) {
+        return item.status.embeddable === true
+          && durationInSeconds(item.contentDetails.duration) >= 65;
+      }).sort(function (a, b) {
+        return Number(b.snippet.channelTitle.endsWith(" - Topic"))
+          - Number(a.snippet.channelTitle.endsWith(" - Topic"));
+      }).map(function (item) {
         return {
-          videoId: item.id.videoId,
+          videoId: item.id,
           trackName: cleanTitle(item.snippet.title),
           artistName: item.snippet.channelTitle.replace(" - Topic", ""),
           channelTitle: item.snippet.channelTitle,
           artworkUrl: item.snippet.thumbnails.default.url
         };
-      }).sort(function (a, b) {
-        return Number(b.channelTitle.endsWith(" - Topic")) - Number(a.channelTitle.endsWith(" - Topic"));
       });
       showSongs();
       say(songs.length ? songs.length + " tracks found. Click one to play." : "Nothing found. Try another search.");
