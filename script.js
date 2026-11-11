@@ -17,7 +17,7 @@ var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
    ===================================================== */
 function updateTime() {
   var now = new Date();
-  $("now").textContent = now.toLocaleString(undefined, {
+  $("dateTime").textContent = now.toLocaleString(undefined, {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
     hour: "numeric", minute: "2-digit", second: "2-digit"
   });
@@ -557,7 +557,7 @@ var playingIndex = -1;    // which result is playing
 
 // Load YouTube IFrame API script automatically
 var tag = document.createElement("script");
-tag.src = "https://youtube.com" + "iframe_api";
+tag.src = "https://www.youtube.com/iframe_api";
 document.head.appendChild(tag);
 
 window.onYouTubeIframeAPIReady = function () {
@@ -578,7 +578,7 @@ window.onYouTubeIframeAPIReady = function () {
 };
 
 function onPlayerStateChange(event) {
-  // 1 = Playing, 2 = Paused, 0 = Ended
+  // 1 = Playing, 2 = Paused, 0 = Ended, 3 = Buffering
   if (event.data === YT.PlayerState.PLAYING) {
     $("playPause").textContent = "Pause";
     $("dockLabel").textContent = "♪ Playing";
@@ -587,25 +587,40 @@ function onPlayerStateChange(event) {
     $("playPause").textContent = "Play";
     $("dockLabel").textContent = "♪ Jukebox";
     stopProgressLoop();
+    updateProgress();
+  } else if (event.data === YT.PlayerState.BUFFERING) {
+    $("playPause").textContent = "Play";
+    $("dockLabel").textContent = "♪ Loading";
+    stopProgressLoop();
   } else if (event.data === YT.PlayerState.ENDED) {
     stopProgressLoop();
     if (playingIndex + 1 < songs.length) playSong(playingIndex + 1);
+    else {
+      $("playPause").textContent = "Play";
+      $("dockLabel").textContent = "♪ Jukebox";
+      updateProgress();
+    }
   }
 }
 
 function startProgressLoop() {
   stopProgressLoop();
   progressTimer = setInterval(function () {
-    if (!ytPlayer || !ytPlayer.getCurrentTime) return;
-    var cur = ytPlayer.getCurrentTime();
-    var dur = ytPlayer.getDuration();
-    if (dur > 0) $("seek").value = (cur / dur) * 100;
-    $("nowTime").textContent = mmss(cur);
+    updateProgress();
   }, 500);
+}
+
+function updateProgress() {
+  if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+  var cur = ytPlayer.getCurrentTime();
+  var dur = ytPlayer.getDuration();
+  if (dur > 0) $("seek").value = (cur / dur) * 100;
+  $("nowTime").textContent = mmss(cur);
 }
 
 function stopProgressLoop() {
   clearInterval(progressTimer);
+  progressTimer = null;
 }
 
 function say(message) { $("musicStatus").textContent = message; }
@@ -623,15 +638,20 @@ function searchMusic(query) {
   if (!query) { say("Type an artist or a song first."); return; }
   say("Searching...");
 
-  var url = "https://googleapis.com" + "youtube/v3/search"
+  var url = "https://www.googleapis.com/youtube/v3/search"
     + "?part=snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=12"
     + "&q=" + encodeURIComponent(query + " official audio")
     + "&key=" + YT_API_KEY;
 
   fetch(url)
     .then(function (response) {
-      if (!response.ok) throw new Error("bad response");
-      return response.json();
+      return response.json().then(function (data) {
+        if (!response.ok) {
+          console.error("YouTube Data API request failed:", data.error || data);
+          throw new Error("YouTube Data API request failed with status " + response.status);
+        }
+        return data;
+      });
     })
     .then(function (data) {
       songs = (data.items || []).map(function (item) {
@@ -648,7 +668,10 @@ function searchMusic(query) {
       showSongs();
       say(songs.length ? songs.length + " tracks found. Click one to play." : "Nothing found. Try another search.");
     })
-    .catch(function () {
+    .catch(function (error) {
+      if (error.message.indexOf("YouTube Data API request failed") !== 0) {
+        console.error("YouTube search failed:", error);
+      }
       say("Couldn't reach YouTube. Check your API key or connection.");
     });
 }
@@ -697,6 +720,8 @@ function playSong(index) {
   $("seek").value = 0;
   $("nowTime").textContent = "0:00";
   $("now").hidden = false;
+  $("playPause").textContent = "Play";
+  $("dockLabel").textContent = "♪ Loading";
 
   var buttons = $("tracks").querySelectorAll(".track");
   buttons.forEach(function (b, i) {
