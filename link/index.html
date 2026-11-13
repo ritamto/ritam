@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Turn a long URL into a short, shareable link.">
+  <title>Link shortener | Ritam's Workshop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    main {
+      width: min(100%, 760px);
+      margin: 4rem auto;
+    }
+
+    .shortener {
+      min-height: 0;
+      padding: clamp(1.25rem, 5vw, 2.5rem);
+    }
+
+    .shortener h1 {
+      font-size: clamp(2rem, 7vw, 3.5rem);
+      overflow-wrap: anywhere;
+    }
+
+    .shortener > p { max-width: 38rem; }
+
+    .shortener form {
+      display: grid;
+      gap: .75rem;
+      margin-top: .5rem;
+    }
+
+    .shortener label { font-weight: 600; }
+
+    .shortener input[type=url] {
+      width: 100%;
+      min-width: 0;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      padding: .7rem .85rem;
+    }
+
+    .shortener form button { justify-self: start; }
+
+    .message {
+      min-height: 1.5em;
+      overflow-wrap: anywhere;
+    }
+
+    .result {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: .75rem;
+      padding: 1rem;
+      border-radius: 16px;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .result[hidden] { display: none; }
+    .result a { font-weight: 600; overflow-wrap: anywhere; }
+    .result button { flex: none; }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 1.5rem;
+      color: var(--paper);
+      text-underline-offset: .2em;
+    }
+
+    @media (max-width: 480px) {
+      .shortener form button { width: 100%; }
+      .result button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="tile mint shortener" aria-labelledby="page-title">
+      <p class="small">RITAM'S WORKSHOP · LINK TOOL</p>
+      <h1 id="page-title">Make it shorter.</h1>
+      <p>Paste a long URL and get a short link you can share anywhere.</p>
+
+      <form id="shorten-form">
+        <label for="long-url">Your long URL</label>
+        <input
+          id="long-url"
+          name="url"
+          type="url"
+          placeholder="https://example.com/a/very/long/link"
+          autocomplete="url"
+          inputmode="url"
+          required
+        >
+        <button id="submit-button" type="submit">Shorten link</button>
+      </form>
+
+      <p id="status" class="message small" role="status" aria-live="polite"></p>
+
+      <div id="result" class="result" hidden>
+        <a id="short-url" target="_blank" rel="noopener noreferrer"></a>
+        <button id="copy-button" type="button">Copy link</button>
+      </div>
+
+      <p class="small">Short links are created by is.gd. Your original URL is sent to their service.</p>
+    </section>
+    <a class="back-link" href="../">← Back to the workshop</a>
+  </main>
+
+  <script>
+    const form = document.getElementById("shorten-form");
+    const input = document.getElementById("long-url");
+    const submitButton = document.getElementById("submit-button");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+    const shortUrl = document.getElementById("short-url");
+    const copyButton = document.getElementById("copy-button");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const originalUrl = new URL(input.value);
+      if (originalUrl.protocol !== "http:" && originalUrl.protocol !== "https:") {
+        status.textContent = "Please enter an HTTP or HTTPS URL.";
+        result.hidden = true;
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Shortening…";
+      status.textContent = "Creating your short link…";
+      result.hidden = true;
+
+      try {
+        const endpoint = new URL("https://is.gd/create.php");
+        endpoint.search = new URLSearchParams({
+          format: "simple",
+          url: originalUrl.href
+        });
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error("The shortening service returned an error.");
+
+        const responseText = (await response.text()).trim();
+        if (responseText.startsWith("Error:")) {
+          throw new Error(responseText.slice("Error:".length).trim());
+        }
+
+        const createdUrl = new URL(responseText);
+        if (createdUrl.protocol !== "https:" || createdUrl.hostname !== "is.gd") {
+          throw new Error("The shortening service returned an unexpected link.");
+        }
+
+        shortUrl.href = createdUrl.href;
+        shortUrl.textContent = createdUrl.href;
+        result.hidden = false;
+        status.textContent = "Your short link is ready.";
+      } catch (error) {
+        status.textContent = error instanceof TypeError
+          ? "Couldn't connect to the shortening service. Please try again."
+          : `Couldn't create a short link: ${error.message}`;
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Shorten link";
+      }
+    });
+
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(shortUrl.href);
+        status.textContent = "Short link copied to clipboard.";
+      } catch {
+        status.textContent = "Couldn't access the clipboard. Select and copy the short link instead.";
+      }
+    });
+  </script>
+</body>
+</html>
