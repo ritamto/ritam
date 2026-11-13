@@ -171,8 +171,24 @@ canvas {
   overflow-wrap: anywhere;
 }
 
-/* ---------- Footer ---------- */
-footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; }
+footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid; gap: 1.25rem; }
+
+/* Big button that leads to the arcade */
+.arcade-btn {
+  display: block;
+  text-align: center;
+  font-family: "Unbounded", system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  color: var(--ink);
+  background: var(--mint);
+  text-decoration: none;
+  border-radius: 24px;
+  padding: 1.5rem 1rem;
+  transition: transform .15s ease, background .15s ease;
+}
+.arcade-btn:hover { background: var(--sun); transform: translateY(-3px); }
+.arcade-btn:focus-visible { outline: 3px solid var(--paper); outline-offset: 4px; }
 
 /* ---------- Magic 8-ball ---------- */
 .peach { background: #ffb38a; }
