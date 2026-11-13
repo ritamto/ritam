@@ -647,7 +647,8 @@ function searchMusic(query) {
   say("Searching...");
 
   var url = "https://www.googleapis.com/youtube/v3/search"
-    + "?part=snippet&type=video&videoEmbeddable=true&maxResults=12"
+    + "?part=snippet&type=video&videoEmbeddable=true"
+    + "&videoCategoryId=10&maxResults=25"      // 10 = Music category only
     + "&q=" + encodeURIComponent(query)
     + "&key=" + YT_API_KEY;
 
@@ -675,8 +676,13 @@ function searchMusic(query) {
     })
     .then(function (items) {
       songs = items.filter(function (item) {
+        // Drop anything tagged as a Short
+        var text = (item.snippet.title + " " + (item.snippet.description || "")).toLowerCase();
+        var isShort = text.indexOf("#short") !== -1;
+
         return item.status.embeddable === true
-          && durationInSeconds(item.contentDetails.duration) >= 65;
+          && !isShort
+          && durationInSeconds(item.contentDetails.duration) >= 120;   // was 65
       }).sort(function (a, b) {
         return Number(b.snippet.channelTitle.endsWith(" - Topic"))
           - Number(a.snippet.channelTitle.endsWith(" - Topic"));
