@@ -3,28 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Overtime | Ritam's Arcade</title>
-  <meta name="description" content="A small retro runner through three worlds.">
+  <title>Dino Runner | Ritam's Arcade</title>
+  <meta name="description" content="Dino Runner">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-
-  <!-- Retro pixel font (the page still works without it) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="style.css">
-</head>
+  </head>
 <body>
-  <!-- React draws the whole page into this box -->
-  <div id="root"></div>
-
-  <!-- Libraries (exact versions, so they can't change under you) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.js"></script>
-
-  <!-- Our code: the game first, then the React page that uses it -->
-  <script src="game.js"></script>
-  <script src="app.js"></script>
+  <div class="dino-container">
+  <iframe 
+    src="https://chromedino.com" 
+    frameborder="0" 
+    scrolling="no" 
+    width="100%" 
+    height="300px" 
+    loading="lazy">
+  </iframe>
+</div>
 </body>
+
 </html>
