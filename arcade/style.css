@@ -1,0 +1,26 @@
+/* ---------- Colours (change these to restyle the whole page) ---------- */
+:root {
+  --plum: #1d1230;
+  --plum-light: #2b1a47;
+  --mint: #7ff0c8;
+  --sun: #ffd84d;
+  --pink: #ff8fb7;
+  --sky: #7cc0ff;
+  --lilac: #c1a8ff;
+  --ink: #1d1230;
+  --paper: #f6f3ff;
+  color-scheme: dark;
+}
+
+/* ---------- Basics ---------- */
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  background: var(--plum);
+  background-image: radial-gradient(90% 60% at 10% -10%, var(--plum-light), transparent);
+  color: var(--paper);
+  font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  padding: clamp(1rem, 4vw, 3rem);
+}
