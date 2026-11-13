@@ -420,18 +420,3 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; }
   place-items: center;
   line-height: 1;
 }
-
-/* ---------- Portal Runner ---------- */
-.arcade {
-  background: #140a2a;
-  color: var(--paper);
-  border: 2px solid #3a2766;
-}
-.arcade button { background: var(--mint); color: var(--ink); }
-
-#game {
-  background: #0b0618;
-  cursor: pointer;
-  touch-action: none;       /* tapping to jump won't scroll the page */
-}
-#game:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
