@@ -3,211 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ritam's Workshop</title>
-  <meta name="description" content="A few small toys you can play with right now.">
+  <title>Ritam Misra</title>
+  <meta name="description" content="Ritam Misra's corner of the internet. Press the button if you dare.">
 
-  <!-- Fonts (optional, the page still works without them) -->
+  <!-- Fonts: a Japanese-style serif for headings, a clean sans for text -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
 
-  <!-- All the looks live in this file -->
   <link rel="stylesheet" href="style.css">
-  <link id="favicon" rel="icon" href="favicon.svg" type="image/svg+xml">
-
-  <!-- Vercel Web Analytics -->
-  <script>
-    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-  </script>
-  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
-  <!-- ===== TOP OF THE PAGE ===== -->
-  <header>
-    <p class="clock" id="dateTime"></p>
-    <h1>Ritam's<br>Workshop</h1>
-    <p>A little corner of the internet where I keep a few toys. Doodle something, see how fast you can click, race a sentence, set a timer, or let a coin make your mind up for you.</p>
-  </header>
+  <!-- ===== THE PAGE BEFORE THE EXPANSION ===== -->
+  <main class="hero">
+    <p class="label">ritammisra.com</p>
+    <h1>Ritam<br>Misra</h1>
+    <p class="lede">A quiet corner of the internet. It's probably safe to stay out here.</p>
 
-  <main class="grid">
-
-    <!-- ===== 1. DOODLE PAD ===== -->
-    <section class="tile wide pink">
-      <h2>Doodle pad</h2>
-      <canvas id="canvas" width="1000" height="420" aria-label="Drawing canvas"></canvas>
-      <div class="row" id="swatches"></div>
-      <div class="row">
-        <button id="undo">Undo</button>
-        <button id="clear">Clear</button>
-        <button id="save">Save as image</button>
-      </div>
-    </section>
-
-    <!-- ===== 2. REACTION TEST ===== -->
-    <section class="tile mint">
-      <h2>Reaction test</h2>
-      <p class="hint">Wait for the box to turn green, then click as fast as you can.</p>
-      <div id="pad" role="button" tabindex="0">Click to start</div>
-      <div class="row">
-        <span class="stat" id="reactionTime">--</span>
-        <span class="small">ms &nbsp;|&nbsp; best: <b id="reactionBest">--</b></span>
-      </div>
-    </section>
-
-    <!-- ===== 3. TYPING SPRINT ===== -->
-    <section class="tile sun">
-      <h2>Typing sprint</h2>
-      <p class="hint">Type the line below. Your timer starts when you press the first key.</p>
-      <div id="target"></div>
-      <input type="text" id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type here">
-      <p class="small" id="source"></p>
-      <div class="row">
-        <span class="stat" id="wpm">--</span>
-        <span class="small">words per minute &nbsp;|&nbsp; best: <b id="wpmBest">--</b></span>
-      </div>
-      <div class="row"><button id="newLine">Another one</button></div>
-    </section>
-
-    <!-- ===== 4. FOCUS TIMER ===== -->
-    <section class="tile sky">
-      <h2>Focus timer</h2>
-      <p class="hint">Pick a length, hit start, and get on with it.</p>
-      <div class="row">
-        <button data-minutes="25">Focus 25</button>
-        <button data-minutes="5">Break 5</button>
-        <button data-minutes="50">Deep 50</button>
-      </div>
-      <div class="stat big" id="clock">25:00</div>
-      <div class="row">
-        <button id="start">Start</button>
-        <button id="reset">Reset</button>
-      </div>
-      <div class="small" id="timerMessage" role="status"></div>
-    </section>
-
-    <!-- ===== 5. DECIDER ===== -->
-    <section class="tile lilac">
-      <h2>Decider</h2>
-      <p class="hint">Type your options, one per line or separated by commas.</p>
-      <textarea id="options" aria-label="Options">Pizza, Pasta, Tacos</textarea>
-      <div class="row">
-        <button id="pick">Pick one</button>
-        <button id="flip">Flip a coin</button>
-      </div>
-      <div id="result" role="status" aria-live="polite">...</div>
-    </section>
-
-       <!-- ===== 6. MAGIC 8-BALL ===== -->
-    <section class="tile peach">
-      <h2>Magic 8-ball</h2>
-      <p class="hint">Think of a yes or no question, type it in, then shake the ball.</p>
-      <input type="text" id="question" placeholder="Should I have another biscuit?" aria-label="Your question">
-      <div class="ball" id="ball">
-        <div class="ball-window" id="answer" role="status" aria-live="polite">8</div>
-      </div>
-      <div class="row">
-        <button id="shake">Shake it</button>
-      </div>
-    </section>
-
-    <!-- ===== 7. SCRATCHPAD ===== -->
-    <section class="tile wide sky">
-      <h2>Scratchpad</h2>
-      <p class="hint">Jot anything down. It saves itself and will still be here next time you visit on this device.</p>
-      <textarea id="notes" class="notes" placeholder="Start typing..." aria-label="Scratchpad"></textarea>
-      <div class="row">
-        <button id="copyNotes">Copy</button>
-        <button id="downloadNotes">Download as .txt</button>
-        <button id="clearNotes">Clear</button>
-        <span class="small" id="notesInfo">0 words</span>
-      </div>
-    </section>
-
-
+    <div class="row">
+      <button id="expand" class="expand">
+        <span>Domain Expansion</span>
+        <small>領域展開</small>
+      </button>
+      <button id="sound" class="ghost" aria-pressed="false">Sound: off</button>
+    </div>
   </main>
 
-  <!-- ===== BOTTOM OF THE PAGE ===== -->
-    <footer>
-    <a class="arcade-btn" href="/arcade/">Play the Arcade →</a>
-    <p>Say hello: <a href="mailto:hello@ritammisra.com">hello@ritammisra.com</a></p>
-  </footer>
+  <!-- ===== THE FLASH THAT PLAYS WHEN YOU PRESS THE BUTTON ===== -->
+  <div class="flash" aria-hidden="true">領域展開</div>
 
-  <!-- =====================================================
-     JUKEBOX SEARCH DOCK (Side Panel - 100% Search & Results)
-     ===================================================== -->
-<aside id="dock" class="dock" aria-label="Jukebox">
-  <button id="dockTab" class="dock-tab" aria-expanded="false" aria-controls="dockBody">
-    <span id="dockLabel">♪ Jukebox</span>
-  </button>
+  <!-- ===== THE INSIDE OF THE DOMAIN (hidden until expanded) ===== -->
+  <section class="barrier" id="barrier" aria-label="Inside the domain" inert>
+    <div class="stars"></div>
+    <div class="rings"></div>
 
-  <div id="dockBody" class="dock-body">
-    <h2>Jukebox</h2>
-    <p class="hint">Search any song or artist and play the full track.</p>
+    <div class="inside">
+      <p class="label">Inside the domain</p>
+      <h2>You're in.</h2>
+      <p>Sure-hit guarantee: you will click the link below.</p>
 
-    <!-- Search Input -->
-    <div class="row">
-      <input id="musicSearch" type="text" placeholder="Song or artist..." aria-label="Search music">
-      <button id="musicGo" type="button">Search</button>
+      <ul class="links">
+        <li><a href="mailto:hello@ritammisra.com">Email <small>hello@ritammisra.com</small></a></li>
+      </ul>
+
+      <button id="release" class="ghost">Release domain</button>
     </div>
+  </section>
 
-    <!-- Quick-Pick Genre Chips -->
-    <div class="row">
-<button class="chip" type="button" data-q="classic rock songs">Rock</button>
-<button class="chip" type="button" data-q="smooth jazz music">Jazz</button>
-<button class="chip" type="button" data-q="instrumental piano music">Piano</button>
-<button class="chip" type="button" data-q="lofi hip hop beats">Lo-fi</button>
-
-    </div>
-
-    <!-- Status Line -->
-    <p id="musicStatus" class="small" role="status"></p>
-
-    <!-- Full-Height Search Results List -->
-    <ul id="tracks" class="tracks"></ul>
-  </div>
-</aside>
-
-<!-- =====================================================
-     FLOATING MINI-PLAYER (Bottom-Right Corner)
-     ===================================================== -->
-<div id="now" class="mini-player" hidden aria-label="Now Playing">
-  <button id="closePlayer" class="mini-close" type="button" aria-label="Close player">✕</button>
-
-  <div class="yt-box">
-    <div id="ytPlayer"></div>
-  </div>
-
-  <div class="mini-info">
-    <b id="nowTitle">Track Title</b>
-    <small id="nowArtist">Artist</small>
-  </div>
-
-  <div class="mini-controls">
-    <button id="prevTrack" type="button" aria-label="Previous track">⏮</button>
-    <button id="playPause" type="button">Pause</button>
-    <button id="nextTrack" type="button" aria-label="Next track">⏭</button>
-    <span id="nowTime" class="small">0:00</span>
-  </div>
-
-  <input id="seek" type="range" min="0" max="100" value="0" aria-label="Seek">
-</div>
-
-
-
-  <!-- The behaviour lives in the js/ folder, one file per toy. Order matters. -->
-  <script src="js/core.js"></script>
-  <script src="js/clock.js"></script>
-  <script src="js/doodle.js"></script>
-  <script src="js/reaction.js"></script>
-  <script src="js/typing.js"></script>
-  <script src="js/timer.js"></script>
-  <script src="js/decider.js"></script>
-  <script src="js/eightball.js"></script>
-  <script src="js/scratchpad.js"></script>
-  <script src="js/favicon.js"></script>
-  <script src="js/jukebox-player.js"></script>
-  <script src="js/jukebox-search.js"></script>
-  <script src="js/jukebox-ui.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
