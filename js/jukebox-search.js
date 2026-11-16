@@ -24,6 +24,25 @@ function durationInSeconds(duration) {
     + (Number(match[4]) || 0);
 }
 
+function fetchYouTubeJson(url) {
+  return fetch(url).then(function (response) {
+    return response.json().then(function (data) {
+      if (!response.ok) {
+        var apiError = data.error || {};
+        var detail = (apiError.details || []).find(function (item) {
+          return item.reason;
+        });
+        var error = new Error(apiError.message || "HTTP " + response.status);
+        error.status = response.status;
+        error.reason = (detail && detail.reason)
+          || (apiError.errors && apiError.errors[0] && apiError.errors[0].reason);
+        throw error;
+      }
+      return data;
+    });
+  });
+}
+
 // Search YouTube for embeddable full-length videos
 function searchMusic(query) {
   query = query.trim();
@@ -35,11 +54,7 @@ function searchMusic(query) {
     + "&q=" + encodeURIComponent(query)
     + "&key=" + YT_API_KEY;
 
-  fetch(url)
-    .then(function (response) {
-      if (!response.ok) throw new Error("HTTP " + response.status);
-      return response.json();
-    })
+  fetchYouTubeJson(url)
     .then(function (data) {
       var ids = (data.items || []).map(function (item) {
         return item.id.videoId;
@@ -50,10 +65,7 @@ function searchMusic(query) {
         + "?part=snippet,contentDetails,status&id=" + encodeURIComponent(ids.join(","))
         + "&key=" + YT_API_KEY;
 
-      return fetch(videosUrl).then(function (response) {
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        return response.json();
-      }).then(function (videosData) {
+      return fetchYouTubeJson(videosUrl).then(function (videosData) {
         return videosData.items || [];
       });
     })
@@ -78,7 +90,17 @@ function searchMusic(query) {
     })
     .catch(function (err) {
       console.error("YouTube search error:", err);
-      say("Couldn't reach YouTube. Check your API key or connection.");
+      if (err.reason === "ACCESS_DENIED" || err.reason === "forbidden") {
+        say("YouTube API access denied. Enable YouTube Data API v3 in the key's Google Cloud project and check its API restrictions.");
+      } else if (err.reason === "API_KEY_HTTP_REFERRER_BLOCKED") {
+        say("This website isn't allowed by the API key's HTTP-referrer restrictions.");
+      } else if (err.reason === "quotaExceeded" || err.reason === "dailyLimitExceeded") {
+        say("YouTube API quota reached. Try again after the quota resets.");
+      } else if (err.status) {
+        say("YouTube search failed (HTTP " + err.status + "). Check the browser console for details.");
+      } else {
+        say("Couldn't connect to YouTube. Check your internet connection.");
+      }
     });
 }
 
