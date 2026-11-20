@@ -11,7 +11,7 @@ const { neon } = require("@neondatabase/serverless");
 const KEEP = 200;
 const SHOW = KEEP;
 const COOLDOWN = 30;
-const THEMES = [1, 2, 4];
+const THEMES = [1, 2, 4, 6, 7];
 const STAMPS = 4;
 const LINK = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|io|in|co|ly|me|xyz|app|dev|ru|cn)\b)/i;
 

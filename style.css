@@ -452,6 +452,8 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
 .postcard-color-0 { background: #ffe28a; }
 .postcard-color-1 { background: #a9e8d1; }
 .postcard-color-2 { background: #d3b8ff; }
+.postcard-color-3 { background: #ff9f8a; }
+.postcard-color-4 { background: #ffb45c; }
 
 .postcard-stamp-choice {
   width: 28px;
@@ -501,6 +503,8 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
 .postcard-tone-0 { background: #ffe28a; }
 .postcard-tone-1 { background: #a9e8d1; }
 .postcard-tone-2 { background: #d3b8ff; }
+.postcard-tone-3 { background: #ff9f8a; }
+.postcard-tone-4 { background: #ffb45c; }
 .postcard-header { display: flex; justify-content: space-between; gap: .5rem; align-items: flex-start; }
 .postcard-stamp { flex: none; font-size: 1.5rem; line-height: 1; }
 .postcard-message { max-width: 100%; margin-top: .7rem; overflow-wrap: anywhere; white-space: pre-wrap; }

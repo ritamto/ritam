@@ -9,9 +9,11 @@
   var THEMES = [
     { name: "Yellow", value: 1 },
     { name: "Green", value: 2 },
-    { name: "Purple", value: 4 }
+    { name: "Purple", value: 4 },
+    { name: "Coral", value: 6 },
+    { name: "Orange", value: 7 }
   ];
-  var THEME_INDEX = [0, 0, 1, 1, 2, 2];
+  var THEME_INDEX = [0, 0, 1, 1, 2, 2, 3, 4];
   var STAMPS = ["✦", "♥", "☀", "✉"];
   var tile = $("postcardTile");
   if (!tile) return;
