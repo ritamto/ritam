@@ -431,6 +431,7 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
 
 
 /* ---------- Postcard wall ---------- */
+.postcard-tile { background: #ffc4dc; }
 .postcard-form { display: flex; flex-direction: column; gap: .45rem; }
 #postcardName, #postcardMessage { font-size: .95rem; padding: .4rem .7rem; }
 #postcardMessage { min-height: 64px; height: 64px; }
