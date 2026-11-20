@@ -29,10 +29,10 @@ small{color:var(--blue)}
 input{font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:2px dashed var(--ink);outline:0;width:60%}
 .bar{height:14px;border:2px solid var(--ink);border-radius:8px 3px 8px 3px;margin:2px 0 8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}.bar.r i{background:var(--red)}.bar.g i{background:#5a8f4e}
 .sheet p{margin:2px 0}ul{margin:4px 0;padding-left:20px}
-</style></head><body>
+textarea{width:100%;box-sizing:border-box;font:13px monospace;color:var(--ink);background:transparent;border:2px dashed var(--ink);border-radius:8px}summary{cursor:pointer;font-family:Caveat,cursive;font-size:26px}</style></head><body>
 <svg width="0" height="0" style="position:absolute"><filter id="wob"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="4"/></filter></svg>
-<div class="wrap"><h1>The Hollow Hunger<small>a co-op sketchbook adventure for 1–5 brave fools</small></h1>
-<div class="grid two"><div id="main"></div><div id="side"></div></div></div>
+<div class="wrap"><h1>The Hollow Hunger<small>a co-op sketchbook adventure for 1–5 brave fools · no accounts needed</small></h1>
+<div id="invite"></div><div id="banner"></div><div class="grid two"><div id="main"></div><div id="side"></div></div></div>
 <script>
 const $=q=>document.querySelector(q),d=n=>1+Math.floor(Math.random()*n),esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ST=["str","dex","con","wis","cha"],mod=v=>Math.floor((v-10)/2),sg=n=>(n>=0?"+":"")+n;
@@ -113,39 +113,32 @@ function create(){
  $("#go").onclick=()=>{nm();begin()};
 }
 /* ---------- co-op engine ---------- */
-let db,myId,P={},GS=null,AS={},solo=false,view="";
+let db,myId,P={},GS=null,AS={},solo=false,view="",room=null,online=null,pres=0,err="";
 const INIT=()=>({scene:"wreck",prev:"wreck",dread:0,warm:10,t:0,rev:0,turn:0,done:{},inv:[],hp:{},notes:[]});
 const order=()=>Object.entries(P).map(([id,p])=>({id,...p})).sort((a,b)=>a.at-b.at||(a.id<b.id?-1:1));
 const hpOf=id=>GS&&GS.hp&&GS.hp[id]!=null?GS.hp[id]:(P[id]?P[id].mhp:0);
-const alive=()=>order().filter(p=>hpOf(p.id)>0);
+const alive=()=>order().filter(p=>hpOf(p.id)>0&&(!online||online.has(p.id)||p.id===myId));
 const active=()=>{const a=alive();return a.length&&GS?a[GS.turn%a.length]:null};
 const has=n=>{const it=[...GS.inv,...order().map(p=>CL[p.cls].i)];return n==="fire"?it.includes("torch")||it.includes("flint"):it.includes(n)};
+const W=(ref,v)=>ref.set(v).catch(e=>{err=e&&e.code==="invalid_argument"?"You can look but not play: ask the owner to share this page with you as a Contributor (or higher).":"Couldn’t save ("+(e&&e.code||"error")+"). Try again.";setBanner()});
+function setBanner(){const b=$("#banner");b.innerHTML=err?`<p class="note" style="color:var(--red)">⚠ ${err}</p>`:solo?`<p class="note">Solo mode: not connected, so friends can’t join. Open the published link while signed in to play together.</p>`:""}
 function shim(){const m={},ls=[],fire=()=>ls.forEach(f=>f()),sn=p=>({id:p.split("/").pop(),exists:p in m,data:()=>m[p]});
  return{doc:p=>({set:async v=>{m[p]=v;fire()},onSnapshot:f=>{ls.push(()=>f(sn(p)));f(sn(p));return()=>{}}}),
  collection:c=>({onSnapshot:f=>{const g=()=>{const docs=Object.keys(m).filter(k=>k.startsWith(c+"/")).map(sn);f({docs,size:docs.length})};ls.push(g);g();return()=>{}}})}}
-async function boot(){
- let u=null;
- try{if(window.claude)[db,u]=await Promise.race([Promise.all([claude.use("db"),claude.use("user")]),new Promise(r=>setTimeout(()=>r([null,null]),6000))])}catch(e){}
- if(!db){db=shim();solo=true}
- try{myId=u&&await u.id()}catch(e){}
- myId=myId||"p"+d(1e6);
- try{if(u)C.name=(await u.me()).name||""}catch(e){}
- db.collection("players").onSnapshot(s=>{P={};s.docs.forEach(x=>P[x.id]=x.data());render()});
- db.doc("game/state").onSnapshot(s=>{GS=s.exists?s.data():null;render()});
- db.collection("assists").onSnapshot(s=>{AS={};s.docs.forEach(x=>AS[x.id]=x.data());render()});
-}
 function render(){
+ setBanner();
+ if(P[myId]&&room&&!pres){pres=1;room.presence({pid:myId})}
  if(!P[myId]){if(view!=="create"){view="create";create()}return}
  view="game";if(!GS)return lobby();show();
 }
 async function begin(){
  const b=CL[C.cls].b,s={};ST.forEach(k=>s[k]=C.base[k]+(b[k]||0));
  const mhp=Math.max(8,10+mod(s.con)*2);
- await db.doc("players/"+myId).set({name:C.name.trim()||"Nameless",cls:C.cls,s,mhp,at:Date.now()});
+ await W(db.doc("players/"+myId),{name:C.name.trim()||"Nameless",cls:C.cls,s,mhp,at:Date.now()});
 }
 function lobby(){
- $("#main").innerHTML=`<div class="paper"><h2>The party gathers…</h2><p>Share this page’s link: up to five friends can sketch heroes and join. When everyone’s here, start the hunt.</p><p class="note">${order().map(p=>esc(p.name)+" the "+p.cls).join(" · ")}</p><button class="btn go" id="start">❄ Begin the hunt</button></div>`;
- $("#start").onclick=()=>db.doc("game/state").set(INIT());
+ $("#main").innerHTML=`<div class="paper"><h2>The party gathers…</h2><p>Share this page’s link (friends need Contributor access to play): up to five friends can sketch heroes and join. When everyone’s here, start the hunt.</p><p class="note">${order().map(p=>esc(p.name)+" the "+p.cls).join(" · ")}</p><button class="btn go" id="start">❄ Begin the hunt</button></div>`;
+ $("#start").onclick=()=>W(db.doc("game/state"),INIT());
  $("#side").innerHTML=sideHTML();
 }
 function sideHTML(){
@@ -165,10 +158,11 @@ function show(){
  <h2>${sc.h}</h2><p>${sc.t}</p>
  ${sc.npc?`<div class="bubble"><b>${sc.npc[0]}:</b> ${sc.npc[1]}</div>`:""}
  ${(GS.notes||[]).map(n=>`<p class="note">${n}</p>`).join("")}
- ${sc.end?`<h2>~ The End ~</h2><button class="btn" id="again">✎ New expedition</button>`:`<p class="note">${mine?"🎲 Your turn! Choose:":"⏳ "+an+" is choosing…"}</p>`+ch.map(({c,i})=>`<button class="btn" data-i="${i}" ${mine?"":"disabled"}>${c.t}${c.chk?` <small>(${c.chk.s.toUpperCase()} DC ${c.chk.dc})</small>`:""}</button>`).join("")+(!mine&&a?`<button class="btn go" id="help">✋ ${hp?"Helping "+an+" (+2) ✓":"Help "+an+" (+2 to their roll)"}</button>`:"")}</div>`;
+ ${sc.end?`<h2>~ The End ~</h2><button class="btn" id="again">✎ New expedition</button>`:`<p class="note">${mine?"🎲 Your turn! Choose:":"⏳ "+an+" is choosing…"}</p>`+ch.map(({c,i})=>`<button class="btn" data-i="${i}" ${mine?"":"disabled"}>${c.t}${c.chk?` <small>(${c.chk.s.toUpperCase()} DC ${c.chk.dc})</small>`:""}</button>`).join("")+(!mine&&a?`<button class="btn go" id="help">✋ ${hp?"Helping "+an+" (+2) ✓":"Help "+an+" (+2 to their roll)"}</button><button class="btn" id="skip">⏭ Skip ${an}’s turn (if they’re away)</button>`:"")}</div>`;
  document.querySelectorAll("[data-i]").forEach(e=>e.onclick=()=>pick(+e.dataset.i));
- if(sc.end)$("#again").onclick=()=>db.doc("game/state").set(INIT());
- const h=$("#help");if(h)h.onclick=()=>db.doc("assists/"+myId).set({rev:hp?-1:GS.rev});
+ if(sc.end)$("#again").onclick=()=>W(db.doc("game/state"),INIT());
+ const h=$("#help");if(h)h.onclick=()=>W(db.doc("assists/"+myId),{rev:hp?-1:GS.rev});
+ const sk=$("#skip");if(sk)sk.onclick=()=>W(db.doc("game/state"),{...GS,turn:GS.turn+1,rev:GS.rev+1});
  $("#side").innerHTML=sideHTML();
 }
 async function pick(i){
@@ -190,7 +184,58 @@ async function pick(i){
  else if(g.dread>=5&&!SPECIAL.has(go)&&go!=="tree")go="ambush";
  if(!SPECIAL.has(go))g.prev=go;
  g.scene=go;g.rev++;g.turn++;
- scrollTo(0,0);await db.doc("game/state").set(g);
+ scrollTo(0,0);await W(db.doc("game/state"),g);
 }
-boot();
+/* ---------- peer-to-peer (WebRTC, copy-paste codes) ---------- */
+let isHost=false,peers=[],net="Solo mode",store={},L=[],started=false;
+const cfg={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+const fire=()=>L.forEach(f=>f()),snap=p=>({id:p.split("/").pop(),exists:p in store,data:()=>store[p]});
+const open=x=>x.ch&&x.ch.readyState==="open",up=()=>!isHost&&peers[0]&&open(peers[0]);
+const bcast=()=>peers.forEach(x=>open(x)&&x.ch.send(JSON.stringify({t:"sync",m:store})));
+const enc=o=>btoa(JSON.stringify(o)),dec=s=>JSON.parse(atob(s.trim()));
+const ice=pc=>new Promise(r=>{if(pc.iceGatheringState==="complete")r();else{pc.onicegatheringstatechange=()=>pc.iceGatheringState==="complete"&&r();setTimeout(r,4000)}});
+const copy=el=>{el.select();try{navigator.clipboard.writeText(el.value)}catch(e){document.execCommand("copy")}};
+function netDb(){return{
+ doc:p=>({set:async v=>{if(up())peers[0].ch.send(JSON.stringify({t:"set",p,v}));else{store[p]=v;fire();if(isHost)bcast()}},onSnapshot:f=>{L.push(()=>f(snap(p)));f(snap(p));return()=>{}}}),
+ collection:c=>({onSnapshot:f=>{const g=()=>{const docs=Object.keys(store).filter(k=>k.startsWith(c+"/")).map(snap);f({docs,size:docs.length})};L.push(g);g();return()=>{}}})}}
+function setBanner(){$("#banner").innerHTML=err?`<p class="note" style="color:var(--red)">⚠ ${err}</p>`:`<p class="note">${net}</p>`}
+function note(){const n=peers.filter(open).length;net=isHost?`Hosting · ${n} friend${n==1?"":"s"} connected`:peers[0]?(open(peers[0])?"Connected to the host":"⚠ Disconnected from the host"):"Solo mode";setBanner();hostUI()}
+function wire(x){
+ x.ch.onmessage=e=>{const m=JSON.parse(e.data);if(m.t==="set"&&isHost){store[m.p]=m.v;fire();bcast()}if(m.t==="sync"&&!isHost){store=m.m;fire()}};
+ x.ch.onopen=()=>{if(isHost)bcast();else start();note()};x.ch.onclose=note}
+function start(){
+ if(started)return;started=true;db=netDb();
+ try{myId=sessionStorage.getItem("pid")}catch(e){}
+ myId=myId||(isHost?"host":"p"+d(1e6));try{sessionStorage.setItem("pid",myId)}catch(e){}
+ db.collection("players").onSnapshot(s=>{P={};s.docs.forEach(x=>P[x.id]=x.data());render()});
+ db.doc("game/state").onSnapshot(s=>{GS=s.exists?s.data():null;render()});
+ db.collection("assists").onSnapshot(s=>{AS={};s.docs.forEach(x=>AS[x.id]=x.data());render()});
+ note();hostUI();
+}
+async function addFriend(){
+ const pc=new RTCPeerConnection(cfg),x={pc,ch:pc.createDataChannel("g")};peers.push(x);wire(x);hostUI();
+ await pc.setLocalDescription(await pc.createOffer());await ice(pc);x.offer=enc(pc.localDescription);hostUI();
+}
+function hostUI(){
+ const el=$("#invite");if(!isHost){el.innerHTML="";return}
+ el.innerHTML=`<details class="paper" ${started?"":"open"}><summary>👥 Invite friends (${peers.filter(open).length} connected)</summary>${peers.map((x,i)=>open(x)?`<p>✓ Friend ${i+1} connected</p>`:`<p>Friend ${i+1}: send them this <b>invite code</b>:</p><textarea readonly rows="2">${x.offer||"…making code…"}</textarea><button class="chip" data-cp="${i}">Copy</button><p>Then paste their <b>reply code</b>:</p><textarea id="ans${i}" rows="2"></textarea><button class="chip go" data-cn="${i}">Connect</button>`).join("")}<p><button class="chip" id="addf">➕ Add a friend</button></p></details>`;
+ el.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>copy(b.previousElementSibling));
+ el.querySelectorAll("[data-cn]").forEach(b=>b.onclick=async()=>{try{await peers[+b.dataset.cn].pc.setRemoteDescription(dec($("#ans"+b.dataset.cn).value))}catch(e){err="That reply code didn’t work. Ask your friend to resend it.";setBanner()}});
+ $("#addf").onclick=addFriend;
+}
+function joinUI(){
+ $("#main").innerHTML=`<div class="paper"><h2>Join a party</h2><p>1. Paste the host’s <b>invite code</b>:</p><textarea id="off" rows="3"></textarea><button class="chip go" id="mk">Make my reply code</button><div id="rep"></div></div>`;
+ $("#mk").onclick=async()=>{try{const pc=new RTCPeerConnection(cfg),x={pc};peers=[x];pc.ondatachannel=e=>{x.ch=e.channel;wire(x)};
+  await pc.setRemoteDescription(dec($("#off").value));await pc.setLocalDescription(await pc.createAnswer());await ice(pc);
+  $("#rep").innerHTML=`<p>2. Send this <b>reply code</b> back to the host, then wait a moment…</p><textarea readonly rows="3">${enc(pc.localDescription)}</textarea><button class="chip" id="cp">Copy</button>`;
+  $("#cp").onclick=e=>copy(e.target.previousElementSibling)}catch(e){$("#rep").innerHTML="<p class='note'>That code didn’t work. Ask the host for a fresh one.</p>"}};
+}
+function menu(){
+ $("#main").innerHTML=`<div class="paper"><h2>How do you want to play?</h2><button class="btn" id="m1">🧍 Solo</button><button class="btn" id="m2">🏕 Host a party (you invite friends)</button><button class="btn" id="m3">🎒 Join a friend’s party</button><p class="note">Works straight from this file: no accounts, no servers. You just swap two copy-paste codes over WhatsApp.</p></div>`;
+ $("#m1").onclick=start;
+ $("#m2").onclick=()=>{isHost=true;$("#main").innerHTML=`<div class="paper"><h2>Hosting</h2><p>Add friends in the panel above, swap codes, then start. (You can add more later.)</p><button class="btn go" id="st">▶ Start the game</button></div>`;$("#st").onclick=start;note();addFriend()};
+ $("#m3").onclick=joinUI;
+}
+menu();
+
 </script></body></html>

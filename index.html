@@ -115,23 +115,20 @@
       <!-- ===== 7. POSTCARD WALL ===== -->
       <section class="tile sky" id="postcardTile" aria-labelledby="postcardTitle">
         <h2 id="postcardTitle">Postcard wall</h2>
-        <p class="hint">Leave a little note for the next person who wanders in.</p>
+        <p class="hint">Leave a little note for the next visitor.</p>
         <form class="postcard-form" id="postcardForm" autocomplete="off">
-          <label class="small" for="postcardName">Your name (optional)</label>
-          <input type="text" id="postcardName" maxlength="24" placeholder="Anonymous">
-          <label class="small" for="postcardMessage">Your message</label>
-          <textarea id="postcardMessage" maxlength="160" placeholder="Wish someone a good day..." required></textarea>
+          <input type="text" id="postcardName" maxlength="24" placeholder="Your name (optional)" aria-label="Your name (optional)">
+          <textarea id="postcardMessage" maxlength="160" placeholder="Wish someone a good day..." aria-label="Your message" required></textarea>
           <span class="small" id="postcardCount">0 / 160</span>
           <div class="row" id="postcardThemes" role="group" aria-label="Postcard colour"></div>
           <div class="row" id="postcardStamps" role="group" aria-label="Postcard stamp"></div>
           <div class="postcard-hp" aria-hidden="true"><label>Website <input type="text" id="postcardWebsite" tabindex="-1" autocomplete="off"></label></div>
-          <div class="row">
+          <div class="row postcard-actions">
             <button type="submit" id="postcardSend">Send postcard</button>
-            <span class="small" id="postcardTotal"></span>
+            <button type="button" class="postcard-more" id="postcardOpen">See all messages</button>
           </div>
         </form>
         <p class="small" id="postcardStatus" role="status" aria-live="polite"></p>
-        <ul class="postcard-list" id="postcardList" aria-label="Visitor postcards"></ul>
       </section>
     </div>
 
@@ -190,6 +187,19 @@
     <ul id="tracks" class="tracks"></ul>
   </div>
 </aside>
+
+<dialog id="postcardDialog" class="postcard-dialog" aria-labelledby="postcardDialogTitle">
+  <div class="postcard-dialog-body">
+    <div class="postcard-dialog-heading">
+      <div>
+        <h2 id="postcardDialogTitle">All messages</h2>
+        <p id="postcardDialogTotal" class="small"></p>
+      </div>
+      <button id="postcardClose" type="button" aria-label="Close messages">✕</button>
+    </div>
+    <ul class="postcard-list" id="postcardAllList" aria-label="All visitor postcards"></ul>
+  </div>
+</dialog>
 
 <!-- =====================================================
      FLOATING MINI-PLAYER (Bottom-Right Corner)

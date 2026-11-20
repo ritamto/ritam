@@ -9,7 +9,7 @@ const crypto = require("crypto");
 const { neon } = require("@neondatabase/serverless");
 
 const KEEP = 200;
-const SHOW = 90;
+const SHOW = KEEP;
 const COOLDOWN = 30;
 const THEMES = 6;
 const STAMPS = 4;

@@ -5,7 +5,6 @@
 (function () {
   var API = "/api/postcards";
   var KEEP = 200;
-  var SHOW = 12;
   var POLL_MS = 30000;
   var THEMES = ["Coral", "Sunshine", "Mint", "Sky", "Lilac", "Blush"];
   var STAMPS = ["✦", "♥", "☀", "✉"];
@@ -16,8 +15,10 @@
   var messageEl = $("postcardMessage");
   var countEl = $("postcardCount");
   var statusEl = $("postcardStatus");
-  var listEl = $("postcardList");
-  var totalEl = $("postcardTotal");
+  var listEl = $("postcardAllList");
+  var totalEl = $("postcardDialogTotal");
+  var dialog = $("postcardDialog");
+  var openButton = $("postcardOpen");
   var sendBtn = $("postcardSend");
   var postcards = [];
   var seen = {};
@@ -101,7 +102,7 @@
 
   function render() {
     listEl.textContent = "";
-    postcards.slice().sort(function (a, b) { return b.t - a.t; }).slice(0, SHOW).forEach(function (postcard) {
+    postcards.slice().sort(function (a, b) { return b.t - a.t; }).forEach(function (postcard) {
       var card = document.createElement("li");
       card.className = "postcard postcard-tone-" + postcard.theme;
 
@@ -128,7 +129,9 @@
       card.appendChild(message);
       listEl.appendChild(card);
     });
-    totalEl.textContent = postcards.length + (postcards.length === 1 ? " postcard" : " postcards");
+    var count = postcards.length;
+    totalEl.textContent = count + (count === 1 ? " message" : " messages");
+    openButton.textContent = "See all messages (" + count + ")";
   }
 
   function loadPostcards() {
@@ -145,12 +148,12 @@
       .catch(function () {
         demoMode = true;
         addPostcards(SEEDS.concat(readLocal()).map(normalize));
-        setStatus("Couldn’t reach the postcard server, so this is a demo wall only you can see.");
+        setStatus("Demo mode: messages are saved on this device.");
       });
   }
 
   function poll() {
-    if (demoMode || document.hidden) return;
+    if (demoMode || document.hidden || !dialog.open) return;
     fetch(API)
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
@@ -186,7 +189,7 @@
     STAMPS.forEach(function (symbol, index) {
       var button = document.createElement("button");
       button.type = "button";
-      button.className = "chip";
+      button.className = "postcard-stamp-choice";
       button.textContent = symbol;
       button.setAttribute("aria-label", "Stamp " + (index + 1));
       button.setAttribute("aria-pressed", String(index === selectedStamp));
@@ -210,7 +213,7 @@
     }
 
     sendBtn.disabled = true;
-    setStatus("Sending your postcard…");
+    setStatus("Sending postcard…");
     fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -258,7 +261,7 @@
         if (postcard) addPostcards([postcard]);
         messageEl.value = "";
         countEl.textContent = "0 / 160";
-        setStatus(demoMode ? "Postcard added! (Demo wall: only you can see it.)" : "Postcard sent! Thanks for stopping by.");
+        setStatus(demoMode ? "Added on this device." : "Postcard sent!");
       })
       .catch(function () {
         setStatus("Couldn’t send your postcard. Try again in a bit.");
@@ -273,6 +276,11 @@
     event.preventDefault();
     submit();
   });
+  openButton.addEventListener("click", function () {
+    if (!dialog.open) dialog.showModal();
+  });
+  $("postcardClose").addEventListener("click", function () { dialog.close(); });
+  dialog.addEventListener("close", function () { openButton.focus(); });
   messageEl.addEventListener("input", function () {
     countEl.textContent = messageEl.value.length + " / 160";
   });
