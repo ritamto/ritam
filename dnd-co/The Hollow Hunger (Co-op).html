@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>The Hollow Hunger</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f3ead3;--ink:#2a2b35;--red:#b3362e;--blue:#3a6ea5;--soft:#2a2b3520;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#23262d;--ink:#e9e5d4;--red:#ff8274;--blue:#8fbbea;--soft:#e9e5d422}}
+:root[data-theme="dark"]{--paper:#23262d;--ink:#e9e5d4;--red:#ff8274;--blue:#8fbbea;--soft:#e9e5d422}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:20px/1.5 'Patrick Hand','Comic Sans MS',cursive;background-image:repeating-linear-gradient(transparent 0 31px,var(--soft) 31px 32px)}
+.wrap{max-width:920px;margin:0 auto;padding:14px}
+h1,h2,h3{font-family:Caveat,'Comic Sans MS',cursive;margin:.2em 0}
+h1{font-size:clamp(36px,8vw,56px);transform:rotate(-1deg);color:var(--red)}
+h1 small{display:block;font-size:.4em;color:var(--ink)}
+h2{font-size:34px}
+.grid{display:grid;gap:20px}@media(min-width:760px){.grid.two{grid-template-columns:1fr 250px}}
+.paper{border:2.5px solid var(--ink);border-radius:255px 15px 225px 15px/15px 225px 15px 255px;padding:14px 22px;background:var(--paper)}
+.sheet{transform:rotate(1.3deg);border-style:dashed;align-self:start;position:relative;font-size:18px}
+.sheet:before{content:"";position:absolute;top:-12px;left:40%;width:70px;height:22px;background:var(--soft);border:1.5px solid var(--ink);transform:rotate(-4deg)}
+.art{width:100%;height:auto;color:var(--ink);filter:url(#wob)}
+.btn,.chip{font:inherit;color:var(--ink);background:transparent;border:2.5px solid var(--ink);border-radius:15px 225px 15px 255px/255px 15px 225px 15px;padding:7px 14px;cursor:pointer;text-align:left}
+.btn{display:block;width:100%;margin:9px 0}
+.btn:hover,.chip:hover,.chip.on{background:var(--soft);transform:rotate(-.5deg)}
+.chip{margin:4px 6px 4px 0}.chip.on{border-color:var(--red);color:var(--red)}.go{border-color:var(--blue);color:var(--blue)}
+small{color:var(--blue)}
+.note{font-family:Caveat,cursive;font-size:24px;color:var(--blue);margin:2px 0;line-height:1.2}
+.bubble{border:2px dashed var(--blue);border-radius:30px 8px 30px 8px;padding:6px 16px;margin:10px 0}
+.bubble b{font-family:Caveat,cursive;font-size:26px;color:var(--red)}
+.stats{display:flex;flex-wrap:wrap;gap:10px}.st{border:2px solid var(--ink);border-radius:50% 40% 50% 40%;width:74px;height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.st span{font-size:26px;font-family:Caveat}.st i{font-size:14px;color:var(--blue)}
+input{font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:2px dashed var(--ink);outline:0;width:60%}
+.bar{height:14px;border:2px solid var(--ink);border-radius:8px 3px 8px 3px;margin:2px 0 8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}.bar.r i{background:var(--red)}.bar.g i{background:#5a8f4e}
+.sheet p{margin:2px 0}ul{margin:4px 0;padding-left:20px}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><filter id="wob"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="4"/></filter></svg>
+<div class="wrap"><h1>The Hollow Hunger<small>a co-op sketchbook adventure for 1–5 brave fools</small></h1>
+<div class="grid two"><div id="main"></div><div id="side"></div></div></div>
+<script>
+const $=q=>document.querySelector(q),d=n=>1+Math.floor(Math.random()*n),esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ST=["str","dex","con","wis","cha"],mod=v=>Math.floor((v-10)/2),sg=n=>(n>=0?"+":"")+n;
+const r4=()=>{const a=[d(6),d(6),d(6),d(6)].sort((x,y)=>x-y);return a[1]+a[2]+a[3]};
+const CL={Ranger:{b:{dex:2,wis:1},i:"torch",d:"Tracker of the northern wood."},Cleric:{b:{wis:2,con:1},i:"salt",d:"Carries blessed salt."},Rogue:{b:{dex:2,cha:1},i:"flint",d:"Quick hands, quicker lies."},Barbarian:{b:{str:2,con:1},i:"cloak",d:"Hits first, shivers later."},Bard:{b:{cha:2,dex:1},i:"flute",d:"All words and wooden flute."}};
+const ITEM={torch:"Pitch torch",salt:"Pouch of salt",flint:"Flint & steel",cloak:"Wolf-fur cloak",flute:"Bone flute",silver:"Silver knife",charm:"Pip’s bone charm",lore:"Marta’s tale (the name Edric Vael)"};
+let C={name:"",cls:"Ranger",base:null};
+const SPECIAL=new Set(["ambush","dead","end_slay","end_burn","end_name","end_flee"]);
+
+/* ---------- doodles ---------- */
+const pine=(x,y,s=1)=>{const a=14*s,h=22*s;return `<path d="M${x} ${y-3*h}l${-a} ${h}h${a/2}l${-.8*a} ${h}h${a/2}l${-a} ${h}h${3.6*a}l${-a} ${-h}h${a/2}l${-.8*a} ${-h}h${a/2}l${-a} ${-h}z M${x} ${y}v8"/>`};
+const ground='<path d="M0 172q60-8 120 0t120 0t160-2"/>';
+const ART={
+forest:()=>pine(60,168,1.1)+pine(150,172,.8)+pine(300,168,1.2)+pine(365,172,.7)+ground+'<circle cx="330" cy="30" r="16" stroke="var(--blue)"/><path d="M90 150h6M210 160h6M250 150h6" />',
+cabin:()=>pine(45,168,.9)+pine(358,168,.9)+ground+'<path d="M135 100h130v70H135zM125 102l75-45 75 45M190 132h26v38h-26M150 115h20v16h-20M232 60q10-14 0-24t6-22"/><path d="M200 60l-10 20" stroke="var(--red)"/>',
+chapel:()=>pine(50,168,.9)+ground+'<path d="M140 172V95q0-52 60-52t60 52v77M200 12v28M188 22h24M165 172v-30M235 172v-24" /><circle cx="320" cy="162" r="9" stroke="var(--red)"/><path d="M306 168h28"/>',
+lake:()=>pine(40,168,.9)+pine(360,168,.9)+'<ellipse cx="200" cy="150" rx="170" ry="26"/><path d="M110 150l30-6 20 8M260 140l-15 12 30 6" stroke="var(--blue)"/><path d="M200 140v-70M200 95l-35-35M200 85l-12-48M200 85l22-45M200 105l40-28"/>',
+wend:()=>pine(35,170,.8)+pine(368,170,.8)+ground+'<path d="M188 32l-20-24m20 24l-32-6m32 6l-10-28M212 32l20-24m-20 24l32-6m-32 6l10-28"/><ellipse cx="200" cy="48" rx="14" ry="19"/><circle cx="194" cy="44" r="3" fill="var(--red)" stroke="var(--red)"/><circle cx="207" cy="44" r="3" fill="var(--red)" stroke="var(--red)"/><path d="M193 58l14 0M200 68v52M190 78h20M190 88h20M191 98h18M200 74q-55 20-66 96M200 74q55 20 66 96M200 120l-20 52M200 120l20 52"/>',
+dead:()=>ground+'<path d="M110 172q90-80 180 0M200 100v-30M188 82h24" stroke="var(--red)"/>',
+dawn:()=>pine(60,168,1)+pine(335,168,1.1)+ground+'<circle cx="200" cy="120" r="30" stroke="var(--red)"/><path d="M200 70v-14M160 82l-10-10M240 82l10-10M150 120h-16M250 120h16" stroke="var(--red)"/>'};
+
+/* ---------- story ---------- */
+const S={
+wreck:{a:"forest",h:"The Wreck",t:"Your supply sled lies split on its side, the dogs gone, the harness not cut but bitten through. The sky is bruise-purple and the snow far too quiet. Somewhere a howl rises like a violin string pulled to breaking. A thread of smoke climbs the ridge. Huge, bare footprints lead into the pines.",c:[
+{t:"Rummage through the wreckage",chk:{s:"wis",dc:10,ok:{txt:"Under a splintered runner: a pitch torch, still dry.",fx:{give:["torch"]},done:1,go:"wreck"},no:{txt:"Numb fingers, nothing but splinters.",fx:{warm:-1},go:"wreck"}}},
+{t:"Climb toward the smoke on the ridge",go:"cabin"},{t:"Follow the footprints into the pines",go:"pines"}]},
+pines:{a:"forest",h:"The Whispering Pines",t:"The pines lean close like gossiping old women. The prints are human-shaped but stretched, toes like fingers, each filled with rime. Beneath a root, a small shape trembles.",npc:["Pip","“Don’t shout. It listens to shouting.” (A fox-hooded trader’s apprentice, scraped raw and shaking.)"],c:[
+{t:"Coax Pip out with a gentle word",chk:{s:"cha",dc:11,ok:{txt:"Pip clings to your sleeve and presses a bone charm into your hand. “Gran said hold it when it comes.”",fx:{give:["charm"],dread:-1},done:1,go:"pines"},no:{txt:"Pip screams. Far off, the howl answers.",fx:{dread:1},go:"pines"}}},
+{t:"Climb to the smoky cabin",go:"cabin"},{t:"Follow the tracks down to the frozen lake",go:"lake"}]},
+cabin:{a:"cabin",h:"Marta’s Cabin",t:"A trapper’s cabin. Antlers over the door, every one nailed upside down. The door opens before you knock and a shotgun greets you.",npc:["Marta","“Count your fingers. Twice. Then tell me why I shouldn’t shoot.”"],c:[
+{t:"Talk your way inside",chk:{s:"cha",dc:10,ok:{txt:"Marta lowers the gun. “Sit.”",go:"inside"},no:{txt:"She cocks the hammer. “Wrong answer.” You back into the cold.",fx:{warm:-1},go:"cabin"}}},
+{t:"Slip down to the ruined chapel",go:"chapel"},{t:"Go down to the frozen lake",go:"lake"}]},
+inside:{a:"cabin",h:"By the Stove",t:"Heat. Real heat. Marta tells it flat: the Hunger was a man, Edric Vael, who ate his own winter camp and never stopped. Fire hurts it. Silver ends it. And at the very last, say his name. It may remember being a man.",npc:["Marta","“Take the salt. Draw a ring when it comes. And don’t you dare trust a hermit who smiles.”"],c:[
+{t:"Warm yourself by the stove",fx:{warm:4,hp:2,give:["lore"]},done:1,free:1,go:"inside"},
+{t:"Ask for salt",fx:{give:["salt"]},done:1,free:1,go:"inside"},
+{t:"Ask for a torch",fx:{give:["torch"]},done:1,free:1,go:"inside"},
+{t:"Head for the chapel",go:"chapel"},{t:"March to the frozen lake",go:"lake"}]},
+chapel:{a:"chapel",h:"The Fallen Chapel",t:"The bell lies in the snow like a dropped skull. Candles burn inside though no one tends them. A hermit whittles something bright and silver among the flames.",npc:["Brother Ash","“Another lamb. Mind the walls. They’ve been whispering your name.”"],c:[
+{t:"Pray with him",chk:{s:"wis",dc:11,ok:{txt:"A strange calm. Ash presses a silver knife into your palm: “Blessed once, for the last hunter. Be better than him.”",fx:{give:["silver"],dread:-1,warm:2},done:1,go:"chapel"},no:{txt:"Ash drifts off mid-prayer, muttering about teeth.",fx:{dread:1},go:"chapel"}}},
+{t:"Quietly pocket the silver knife",chk:{s:"dex",dc:13,ok:{txt:"Smooth. Almost too smooth.",fx:{give:["silver"]},done:1,go:"chapel"},no:{txt:"A floorboard creaks. Ash smiles with too many teeth and lets you go. Somehow worse.",fx:{dread:2},done:1,go:"chapel"}}},
+{t:"Warm yourself at the candles",fx:{warm:3},done:1,go:"chapel"},{t:"Leave for the frozen lake",go:"lake"}]},
+lake:{a:"lake",h:"The Black Mirror",t:"The lake is a black mirror under frost, vast as a held breath. At its heart rises a dead tree, enormous and hollow, branches splayed like antlers. Every instinct says that is where it sleeps. The ice groans.",c:[
+{t:"Cross the ice directly",chk:{s:"dex",dc:12,ok:{txt:"Light as a feather across the groaning ice.",go:"tree"},no:{txt:"The ice cracks. You plunge to the waist and haul out gasping.",fx:{hp:-3,warm:-2},go:"tree"}}},
+{t:"Circle the shore through the pines",chk:{s:"con",dc:11,ok:{txt:"Cold, slow, and quiet.",go:"tree"},no:{txt:"Frostbite bites deep, and branches snap loud.",fx:{warm:-3,dread:1},go:"tree"}}},
+{t:"Retreat to the cabin",go:()=>has("lore")?"inside":"cabin"}]},
+tree:{a:"wend",h:"The Hollow Tree",t:"Up close the tree is a ribcage. Bones, human, animal, sled-dog, are woven through its roots. Something breathes inside, slow and wet. Two coals open in a hollow of antlers. It has been waiting. It is so, so hungry.",c:[
+{t:"Torch the hollow and finish it with silver",need:"fire",need2:"silver",free:1,go:"end_slay"},
+{t:"Speak the name: “Edric Vael.”",need:"lore",chk:{s:"cha",dc:13,ok:{go:"end_name"},no:{txt:"It laughs with your own voice. It does not remember.",fx:{dread:6},go:"ambush"}}},
+{t:"Burn the tree and run",need:"fire",chk:{s:"dex",dc:12,ok:{go:"end_burn"},no:{txt:"Flames roar, but so does it.",fx:{hp:-5,dread:5},go:"ambush"}}},
+{t:"Sneak past the nest to the old sled road",chk:{s:"dex",dc:14,ok:{go:"end_flee"},no:{txt:"A bone cracks underfoot.",fx:{dread:6},go:"ambush"}}}]},
+ambush:{a:"wend",h:"It Finds You",t:"The howl breaks directly behind you. Branches shatter. It unfolds from the dark: nine feet of starved limb, antlers, a mouth like a split in a frozen pond. It says your name in your own voice.",c:[
+{t:"Thrust fire in its face",need:"fire",free:1,fx:{dread:-4},txt:"It shrieks and recoils from the flame.",go:"@back"},
+{t:"Draw a ring of salt",need:"salt",free:1,fx:{dread:-3,hp:-1},go:"@back"},
+{t:"Stab it with silver",need:"silver",free:1,chk:{s:"str",dc:12,ok:{txt:"The silver sears. It flees, howling.",fx:{dread:-4,hp:-1},go:"@back"},no:{txt:"Claws rake you.",fx:{dread:-2,hp:-5},go:"@back"}}},
+{t:"Run!",free:1,chk:{s:"dex",dc:14,ok:{txt:"You vanish into the snow.",fx:{dread:-3},go:"@back"},no:{txt:"It catches you by the ankle.",fx:{dread:-2,hp:-4},go:"@back"}}},
+{t:"Stand and fight",free:1,chk:{s:"str",dc:16,ok:{txt:"You wound it. It melts back into the dark.",fx:{dread:-3,hp:-2},go:"@back"},no:{txt:"It barely notices you.",fx:{dread:-2,hp:-6},go:"@back"}}}]},
+dead:{a:"dead",end:1,h:"The Snow Settles",t:"The cold, or the Hunger, takes you. Come spring, someone finds a camp, a note, and one more antler on the tree. Your story is the forest’s now."},
+end_slay:{a:"dawn",end:1,h:"The Hunger Ends",t:"Fire climbs the hollow, silver finds its heart, and the Hunger folds into ash and bone. The ice sings. The long winter breaks. They will tell this tale at hearths for a hundred years."},
+end_name:{a:"dawn",end:1,h:"The Man Remembered",t:"At the name, the antlers crack and fall. A thin, tired man kneels in the snow where the monster stood. “Thank you,” he whispers, and is gone. The howling never returns."},
+end_burn:{a:"dawn",end:1,h:"Smoke on the Horizon",t:"You race across the ice as the tree burns behind you, the howl turning to a scream and then to nothing. You live. But some nights you still hear your name, softly, on the wind."},
+end_flee:{a:"dawn",end:1,h:"The Long Road Out",t:"You slip through the bones and onto the old sled road. Dawn finds you alive and starving, and it follows you for a long time. The Hunger is still out there."}
+};
+
+/* ---------- engine ---------- */
+function create(){
+ if(!C.base)C.base=Object.fromEntries(ST.map(s=>[s,r4()]));
+ const b=CL[C.cls].b;$("#side").innerHTML="";
+ $("#main").innerHTML=`<div class="paper"><h2>Sketch your hero</h2>
+ <p>Name: <input id="nm" maxlength="20" value="${esc(C.name)}" placeholder="who goes into the woods?"></p>
+ <p>Class:</p><div>${Object.keys(CL).map(k=>`<button class="chip ${k==C.cls?"on":""}" data-c="${k}">${k}</button>`).join("")}</div>
+ <p class="note">${CL[C.cls].d} Starts with: ${ITEM[CL[C.cls].i]}.</p>
+ <p>Ability scores (4d6 drop lowest, plus class bonus):</p>
+ <div class="stats">${ST.map(s=>{const v=C.base[s]+(b[s]||0);return `<div class="st"><b>${s.toUpperCase()}</b><span>${v}</span><i>${sg(mod(v))}</i></div>`}).join("")}</div>
+ <p><button class="chip" id="rr">🎲 Reroll</button> <button class="chip go" id="go">Join the party →</button></p></div>`;
+ const nm=()=>C.name=$("#nm").value;
+ document.querySelectorAll("[data-c]").forEach(e=>e.onclick=()=>{nm();C.cls=e.dataset.c;create()});
+ $("#rr").onclick=()=>{nm();C.base=null;create()};
+ $("#go").onclick=()=>{nm();begin()};
+}
+/* ---------- co-op engine ---------- */
+let db,myId,P={},GS=null,AS={},solo=false,view="";
+const INIT=()=>({scene:"wreck",prev:"wreck",dread:0,warm:10,t:0,rev:0,turn:0,done:{},inv:[],hp:{},notes:[]});
+const order=()=>Object.entries(P).map(([id,p])=>({id,...p})).sort((a,b)=>a.at-b.at||(a.id<b.id?-1:1));
+const hpOf=id=>GS&&GS.hp&&GS.hp[id]!=null?GS.hp[id]:(P[id]?P[id].mhp:0);
+const alive=()=>order().filter(p=>hpOf(p.id)>0);
+const active=()=>{const a=alive();return a.length&&GS?a[GS.turn%a.length]:null};
+const has=n=>{const it=[...GS.inv,...order().map(p=>CL[p.cls].i)];return n==="fire"?it.includes("torch")||it.includes("flint"):it.includes(n)};
+function shim(){const m={},ls=[],fire=()=>ls.forEach(f=>f()),sn=p=>({id:p.split("/").pop(),exists:p in m,data:()=>m[p]});
+ return{doc:p=>({set:async v=>{m[p]=v;fire()},onSnapshot:f=>{ls.push(()=>f(sn(p)));f(sn(p));return()=>{}}}),
+ collection:c=>({onSnapshot:f=>{const g=()=>{const docs=Object.keys(m).filter(k=>k.startsWith(c+"/")).map(sn);f({docs,size:docs.length})};ls.push(g);g();return()=>{}}})}}
+async function boot(){
+ let u=null;
+ try{if(window.claude)[db,u]=await Promise.race([Promise.all([claude.use("db"),claude.use("user")]),new Promise(r=>setTimeout(()=>r([null,null]),6000))])}catch(e){}
+ if(!db){db=shim();solo=true}
+ try{myId=u&&await u.id()}catch(e){}
+ myId=myId||"p"+d(1e6);
+ try{if(u)C.name=(await u.me()).name||""}catch(e){}
+ db.collection("players").onSnapshot(s=>{P={};s.docs.forEach(x=>P[x.id]=x.data());render()});
+ db.doc("game/state").onSnapshot(s=>{GS=s.exists?s.data():null;render()});
+ db.collection("assists").onSnapshot(s=>{AS={};s.docs.forEach(x=>AS[x.id]=x.data());render()});
+}
+function render(){
+ if(!P[myId]){if(view!=="create"){view="create";create()}return}
+ view="game";if(!GS)return lobby();show();
+}
+async function begin(){
+ const b=CL[C.cls].b,s={};ST.forEach(k=>s[k]=C.base[k]+(b[k]||0));
+ const mhp=Math.max(8,10+mod(s.con)*2);
+ await db.doc("players/"+myId).set({name:C.name.trim()||"Nameless",cls:C.cls,s,mhp,at:Date.now()});
+}
+function lobby(){
+ $("#main").innerHTML=`<div class="paper"><h2>The party gathers…</h2><p>Share this page’s link: up to five friends can sketch heroes and join. When everyone’s here, start the hunt.</p><p class="note">${order().map(p=>esc(p.name)+" the "+p.cls).join(" · ")}</p><button class="btn go" id="start">❄ Begin the hunt</button></div>`;
+ $("#start").onclick=()=>db.doc("game/state").set(INIT());
+ $("#side").innerHTML=sideHTML();
+}
+function sideHTML(){
+ const a=GS&&active(),m=P[myId];
+ return `<div class="paper sheet"><h3>The Party</h3>${order().map(p=>{const h=Math.max(0,hpOf(p.id));return `<p>${a&&a.id===p.id?"➤ ":""}<b>${esc(p.name)}</b> <small>${p.cls}${p.id===myId?" (you)":""}${h<=0?" · fallen":" · "+h+"/"+p.mhp+" HP"}</small></p><div class="bar g"><i style="width:${h/p.mhp*100}%"></i></div>`}).join("")}
+ <p>Shared warmth ${GS?GS.warm:10}/10</p><div class="bar"><i style="width:${(GS?GS.warm:10)*10}%"></i></div>
+ <p>Dread (it’s close…)</p><div class="bar r"><i style="width:${(GS?GS.dread:0)/6*100}%"></i></div>
+ <p>${ST.map(s=>`${s.toUpperCase()} ${m.s[s]} (${sg(mod(m.s[s]))})`).join(" · ")}</p>
+ <p><b>Party pack:</b></p><ul>${[...new Set([...(GS?GS.inv:[]),...order().map(p=>CL[p.cls].i)])].map(i=>`<li>${ITEM[i]}</li>`).join("")}</ul>
+ <p class="note">${solo?"Solo mode (not connected).":"Share the link to invite friends!"}</p></div>`;
+}
+function show(){
+ const sc=S[GS.scene],a=active(),mine=a&&a.id===myId,an=a?esc(a.name):"?";
+ const ch=sc.c?sc.c.map((c,i)=>({c,i})).filter(({c,i})=>!GS.done[GS.scene+i]&&(!c.need||has(c.need))&&(!c.need2||has(c.need2))):[];
+ const hp=AS[myId]&&AS[myId].rev===GS.rev;
+ $("#main").innerHTML=`<div class="paper"><svg class="art" viewBox="0 0 400 190" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${ART[sc.a]()}</svg>
+ <h2>${sc.h}</h2><p>${sc.t}</p>
+ ${sc.npc?`<div class="bubble"><b>${sc.npc[0]}:</b> ${sc.npc[1]}</div>`:""}
+ ${(GS.notes||[]).map(n=>`<p class="note">${n}</p>`).join("")}
+ ${sc.end?`<h2>~ The End ~</h2><button class="btn" id="again">✎ New expedition</button>`:`<p class="note">${mine?"🎲 Your turn! Choose:":"⏳ "+an+" is choosing…"}</p>`+ch.map(({c,i})=>`<button class="btn" data-i="${i}" ${mine?"":"disabled"}>${c.t}${c.chk?` <small>(${c.chk.s.toUpperCase()} DC ${c.chk.dc})</small>`:""}</button>`).join("")+(!mine&&a?`<button class="btn go" id="help">✋ ${hp?"Helping "+an+" (+2) ✓":"Help "+an+" (+2 to their roll)"}</button>`:"")}</div>`;
+ document.querySelectorAll("[data-i]").forEach(e=>e.onclick=()=>pick(+e.dataset.i));
+ if(sc.end)$("#again").onclick=()=>db.doc("game/state").set(INIT());
+ const h=$("#help");if(h)h.onclick=()=>db.doc("assists/"+myId).set({rev:hp?-1:GS.rev});
+ $("#side").innerHTML=sideHTML();
+}
+async function pick(i){
+ const a=active();if(!a||a.id!==myId)return;
+ const sc=S[GS.scene],c=sc.c[i],me=P[myId],nm=esc(me.name),g=JSON.parse(JSON.stringify(GS));g.notes=[];let o=c,go=c.go;
+ const fx=f=>{if(!f)return;g.warm+=f.warm||0;g.dread+=f.dread||0;(f.give||[]).forEach(x=>g.inv.includes(x)||g.inv.push(x));
+  if(f.hp>0)order().forEach(p=>{g.hp[p.id]=Math.min(p.mhp,hpOf(p.id)+f.hp)});else if(f.hp)g.hp[myId]=hpOf(myId)+f.hp};
+ if(c.chk){const k=c.chk,r=d(20),help=Math.min(4,2*Object.entries(AS).filter(([id,v])=>id!==myId&&v.rev===GS.rev&&hpOf(id)>0).length),m=mod(me.s[k.s])+help,ok=r==20||(r!=1&&r+m>=k.dc);
+  g.notes.push(`🎲 ${nm} rolls d20 (${r}) ${k.s.toUpperCase()} ${sg(m)}${help?" incl. +"+help+" teamwork":""} = ${r+m} vs DC ${k.dc}: ${ok?"success!":"failure."}`);o=ok?k.ok:k.no;go=o.go||c.go}
+ if(o.txt)g.notes.push(o.txt);
+ if(c.done||o.done)g.done[GS.scene+i]=1;
+ fx(o.fx);
+ if(!c.free){g.t++;if(!(has("cloak")&&g.t%2))g.warm--;if(g.t%3==0){g.dread++;g.notes.push("…Something huge shifts in the dark behind you.")}}
+ if(typeof go==="function")go=go();if(go==="@back")go=g.prev;
+ g.warm=Math.min(10,g.warm);g.dread=Math.max(0,Math.min(6,g.dread));
+ if(g.hp[myId]<=0)g.notes.push(nm+" collapses in the snow! Rest by a fire to revive them.");
+ const left=order().some(p=>(g.hp[p.id]!=null?g.hp[p.id]:p.mhp)>0);
+ if(!left||g.warm<=0){go="dead";g.notes.push(g.warm<=0?"The cold has finally won.":"No one is left standing.")}
+ else if(g.dread>=5&&!SPECIAL.has(go)&&go!=="tree")go="ambush";
+ if(!SPECIAL.has(go))g.prev=go;
+ g.scene=go;g.rev++;g.turn++;
+ scrollTo(0,0);await db.doc("game/state").set(g);
+}
+boot();
+</script></body></html>
