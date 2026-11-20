@@ -1,9 +1,0 @@
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/dnd", "destination": "/dnd/index.html" },
-    { "source": "/dnd/api/:path*", "destination": "/api/dnd/:path*" }
-  ],
-  "redirects": [{ "source": "/dnd-co", "destination": "/dnd", "permanent": false }]
-}

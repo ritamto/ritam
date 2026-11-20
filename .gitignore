@@ -2,8 +2,3 @@
 .env.local
 .vercel
 node_modules
-
-# game build output + env
-dnd/
-node_modules
-.env
