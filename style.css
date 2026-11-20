@@ -44,7 +44,6 @@ header p:last-child { margin-top: 1rem; max-width: 36rem; color: #cbbfe6; }
 
 /* ---------- The grid of toys ---------- */
 .grid {
-  position: relative;   /* the candy jar canvas is positioned inside the grid */
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
@@ -422,44 +421,11 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
 }
 
 
-/* ---------- Candy jar ---------- */
-/* One transparent canvas over the grid draws the jar and the flying lid.
-   It ignores clicks so the other toys keep working underneath. */
-#jarCanvas {
-  position: absolute;
-  left: 0;
-  pointer-events: none;
-  z-index: 10;          /* above the cards, below the jukebox */
-  background: transparent;
-  border-radius: 0;
-  cursor: default;
-}
-
-.jar-slot {
-  position: relative;
-  flex: none;
-  height: 250px;
-  border-radius: 16px;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-.jar-slot.open { cursor: default; }
-.jar-slot.fallback { display: grid; place-items: center; font-size: 5rem; }
-
-.jar-note {
-  background: var(--paper);
-  border: 3px solid var(--ink);
-  border-radius: 14px;
-  padding: .6rem .8rem;
-  overflow-wrap: anywhere;
-}
-.jar-note[hidden] { display: none; }
-
-.jar-form { display: flex; flex-direction: column; gap: .5rem; }
-.jar-form[hidden] { display: none; }
+/* ---------- Postcard wall ---------- */
+.postcard-form { display: flex; flex-direction: column; gap: .5rem; }
 
 /* Hidden trap field: people never see it, spam bots fill it in */
-.jar-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.postcard-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 .chip {
   background: transparent;
@@ -470,15 +436,54 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
 }
 .chip[aria-pressed=true] { background: var(--ink); color: var(--paper); }
 
-.jar-list summary { cursor: pointer; font-weight: 600; }
-.jar-list ul {
+.postcard-color {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+}
+.postcard-color[aria-pressed=true] { border-color: var(--paper); box-shadow: 0 0 0 2px var(--ink); }
+.postcard-color-0 { background: #ffb6a3; }
+.postcard-color-1 { background: #ffe28a; }
+.postcard-color-2 { background: #a9e8d1; }
+.postcard-color-3 { background: #a8d7ff; }
+.postcard-color-4 { background: #d3b8ff; }
+.postcard-color-5 { background: #ffc4dc; }
+
+.postcard-list {
   list-style: none;
   padding: 0;
-  margin-top: .6rem;
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-  max-height: 240px;
-  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: .9rem;
 }
-.jar-list li { overflow-wrap: anywhere; }
+.postcard {
+  position: relative;
+  min-height: 160px;
+  padding: 1rem;
+  border: 2px solid rgba(29, 18, 48, .25);
+  border-radius: 6px 16px 6px 16px;
+  color: var(--ink);
+  box-shadow: 3px 5px 0 rgba(29, 18, 48, .16);
+  overflow-wrap: anywhere;
+  transform: rotate(var(--postcard-tilt, 0deg));
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.postcard:hover { transform: rotate(0) translateY(-3px); box-shadow: 4px 8px 0 rgba(29, 18, 48, .2); }
+.postcard:nth-child(3n + 1) { --postcard-tilt: -1deg; }
+.postcard:nth-child(3n + 2) { --postcard-tilt: 1deg; }
+.postcard-tone-0 { background: #ffb6a3; }
+.postcard-tone-1 { background: #ffe28a; }
+.postcard-tone-2 { background: #a9e8d1; }
+.postcard-tone-3 { background: #a8d7ff; }
+.postcard-tone-4 { background: #d3b8ff; }
+.postcard-tone-5 { background: #ffc4dc; }
+.postcard-header { display: flex; justify-content: space-between; gap: .5rem; align-items: flex-start; }
+.postcard-stamp { flex: none; font-size: 1.5rem; line-height: 1; }
+.postcard-message { margin-top: .7rem; white-space: pre-wrap; }
+.postcard-list:empty::after { content: "No postcards yet. Be the first to leave a note!"; opacity: .75; }
+
+@media (prefers-reduced-motion: reduce) {
+  .postcard { transition: none; }
+}
