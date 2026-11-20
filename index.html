@@ -111,7 +111,39 @@
       </div>
     </section>
 
-    <!-- ===== 7. SCRATCHPAD ===== -->
+    <!-- ===== 7. CANDY JAR ===== -->
+    <section class="tile mint" id="jarTile" aria-labelledby="jarTitle">
+      <h2 id="jarTitle">Candy jar</h2>
+      <p class="hint">Leave a thought and it becomes a candy. Poke a candy to read it.</p>
+      <div class="jar-slot" id="jarSlot" role="button" tabindex="0" aria-label="Candy jar. Press to open it and add a thought."></div>
+      <p class="jar-note" id="jarNote" role="status" aria-live="polite" hidden></p>
+      <form class="jar-form" id="jarForm" autocomplete="off" hidden>
+        <label class="small" for="jarName">Your name (optional)</label>
+        <input type="text" id="jarName" maxlength="24" placeholder="Anonymous">
+        <label class="small" for="jarMsg">Your thought</label>
+        <textarea id="jarMsg" maxlength="160" placeholder="Something kind, funny or strange..." required></textarea>
+        <span class="small" id="jarCountText">0 / 160</span>
+        <div class="row" id="jarColors" role="group" aria-label="Candy colour"></div>
+        <div class="row" id="jarShapes" role="group" aria-label="Candy shape"></div>
+        <div class="jar-hp" aria-hidden="true"><label>Website <input type="text" id="jarWebsite" tabindex="-1" autocomplete="off"></label></div>
+        <div class="row">
+          <button type="submit" id="jarSend">Drop it in</button>
+          <button type="button" id="jarCancel">Cancel</button>
+        </div>
+      </form>
+      <div class="row">
+        <button type="button" id="jarAdd">Add a candy</button>
+        <button type="button" id="jarPull">Pull one out</button>
+        <span class="small" id="jarTotal"></span>
+      </div>
+      <p class="small" id="jarStatus" role="status" aria-live="polite"></p>
+      <details class="jar-list">
+        <summary>Read every thought</summary>
+        <ul id="jarList"></ul>
+      </details>
+    </section>
+
+    <!-- ===== 8. SCRATCHPAD ===== -->
     <section class="tile wide sky">
       <h2>Scratchpad</h2>
       <p class="hint">Jot anything down. It saves itself and will still be here next time you visit on this device.</p>
@@ -206,5 +238,6 @@
   <script src="js/scratchpad.js"></script>
   <script src="js/favicon.js"></script>
   <script src="js/jukebox.js"></script>
+  <script src="js/candyjar.js"></script>
 </body>
 </html>

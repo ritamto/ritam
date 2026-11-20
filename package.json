@@ -1,0 +1,8 @@
+{
+  "name": "ritam",
+  "private": true,
+  "description": "Small toys. The only dependency is the Neon driver used by api/candies.js.",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}

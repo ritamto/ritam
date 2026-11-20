@@ -44,6 +44,7 @@ header p:last-child { margin-top: 1rem; max-width: 36rem; color: #cbbfe6; }
 
 /* ---------- The grid of toys ---------- */
 .grid {
+  position: relative;   /* the candy jar canvas is positioned inside the grid */
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
@@ -419,3 +420,65 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
   place-items: center;
   line-height: 1;
 }
+
+
+/* ---------- Candy jar ---------- */
+/* One transparent canvas over the grid draws the jar and the flying lid.
+   It ignores clicks so the other toys keep working underneath. */
+#jarCanvas {
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;          /* above the cards, below the jukebox */
+  background: transparent;
+  border-radius: 0;
+  cursor: default;
+}
+
+.jar-slot {
+  position: relative;
+  flex: none;
+  height: 250px;
+  border-radius: 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.jar-slot.open { cursor: default; }
+.jar-slot.fallback { display: grid; place-items: center; font-size: 5rem; }
+
+.jar-note {
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: .6rem .8rem;
+  overflow-wrap: anywhere;
+}
+.jar-note[hidden] { display: none; }
+
+.jar-form { display: flex; flex-direction: column; gap: .5rem; }
+.jar-form[hidden] { display: none; }
+
+/* Hidden trap field: people never see it, spam bots fill it in */
+.jar-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.chip {
+  background: transparent;
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  padding: .25rem .8rem;
+  font-size: .9rem;
+}
+.chip[aria-pressed=true] { background: var(--ink); color: var(--paper); }
+
+.jar-list summary { cursor: pointer; font-weight: 600; }
+.jar-list ul {
+  list-style: none;
+  padding: 0;
+  margin-top: .6rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  max-height: 240px;
+  overflow: auto;
+}
+.jar-list li { overflow-wrap: anywhere; }
