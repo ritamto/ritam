@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wayfarer’s Atlas – Endless D&D Map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+:root{--ui:#18232a;--ink:#ece6d3;--mut:#9fb0ad;--acc:#e3b45c;--line:#34474e;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root{--ui:#f3efe2;--ink:#1d2a2e;--mut:#5b6b68;--acc:#8a5a10;--line:#c9c1a8;color-scheme:light}}
+html,body{height:100%;margin:0;overflow:hidden;background:#1c3a4d;font-family:'Alegreya Sans',Georgia,sans-serif;color:var(--ink)}
+svg#map{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}
+svg#map.drag{cursor:grabbing}
+.poi,.npc,.pin{cursor:pointer}
+.lbl{font-family:'IM Fell English',Georgia,serif;font-size:14px;fill:#fff7e0;stroke:#1b1710;stroke-width:3.5;paint-order:stroke;text-anchor:middle}
+#night{position:fixed;inset:0;pointer-events:none;background:rgba(10,16,48,.5);mix-blend-mode:multiply;opacity:0;transition:opacity .4s}
+.bar{position:fixed;background:var(--ui);border:1px solid var(--line);border-radius:10px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+#title{top:calc(10px + env(safe-area-inset-top,0px));left:10px;font-family:'IM Fell English',Georgia,serif;font-size:19px;padding:6px 12px}
+#tools{bottom:calc(10px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);max-width:calc(100vw - 20px);justify-content:center}
+#top{top:calc(10px + env(safe-area-inset-top,0px));right:10px}
+button,input{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:7px;padding:5px 10px}
+button{cursor:pointer}button:hover{border-color:var(--acc)}
+button.on{background:var(--acc);color:#1b1710;border-color:var(--acc);font-weight:700}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+input{width:92px}
+#hud{bottom:calc(64px + env(safe-area-inset-bottom,0px));left:10px;font-size:14px;color:var(--mut)}
+#card{position:fixed;right:10px;top:calc(64px + env(safe-area-inset-top,0px));width:min(320px,calc(100vw - 20px));max-height:calc(100vh - 150px);overflow:auto;background:var(--ui);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+#card h2{font-family:'IM Fell English',Georgia,serif;font-weight:400;font-size:24px;margin:0 0 2px}
+#card .sub{color:var(--mut);margin:0 0 10px}
+#card h3{font-size:16px;margin:12px 0 4px;color:var(--acc)}
+#card p{margin:4px 0;line-height:1.4}
+#card .x{position:absolute;top:8px;right:8px;padding:2px 8px}
+#card .npcrow{border-top:1px solid var(--line);padding:6px 0}
+</style>
+</head>
+<body>
+<svg id="map" role="img" aria-label="Endless fantasy map. Drag to pan, scroll to zoom.">
+  <defs><pattern id="g" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#000" stroke-opacity=".22"/></pattern></defs>
+  <g id="root"><g id="chunks" shape-rendering="crispEdges"></g><g id="pins"></g><g id="ruler"></g><g id="party"></g></g>
+  <rect id="gridrect" width="100%" height="100%" fill="url(#g)" style="display:none;pointer-events:none"/>
+</svg>
+<div id="night"></div>
+<div class="bar" id="title">Wayfarer’s Atlas</div>
+<div class="bar" id="top">
+  <input id="seed" value="Eldermoor" aria-label="World seed">
+  <button id="reroll" title="New random world">New world</button>
+  <input id="goto" placeholder="x, y" aria-label="Go to tile"><button id="go">Go</button>
+</div>
+<div class="bar" id="hud"></div>
+<div class="bar" id="tools">
+  <button data-tool="explore" class="on">Explore</button>
+  <button data-tool="pin">Drop pin</button>
+  <button data-tool="ruler">Measure</button>
+  <button data-tool="party">Move party</button>
+  <button id="clear">Clear</button>
+  <button id="gridbtn">Grid</button>
+  <button id="nightbtn">Night</button>
+  <button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button>
+  <button id="d20">d20</button>
+</div>
+<div id="card"></div>
+
+<script>
+const T=32,C=16,CS=T*C,$=id=>document.getElementById(id);
+const svg=$('map'),root=$('root'),chunksG=$('chunks'),pinsG=$('pins'),rulerG=$('ruler'),partyG=$('party'),card=$('card');
+let seed=0,view={x:0,y:0,k:1},W=0,H=0,tool='explore',pins=[],ruler=[],party={x:16,y:16},cache=new Map();
+
+/* ---------- noise ---------- */
+function h2(x,y,s){let n=Math.imul(x|0,374761393)^Math.imul(y|0,668265263)^Math.imul(s|0,1274126177);n=Math.imul(n^(n>>>13),1274126177);n^=n>>>16;return(n>>>0)/4294967296}
+function vn(x,y,s){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const a=h2(xi,yi,s),b=h2(xi+1,yi,s),c=h2(xi,yi+1,s),d=h2(xi+1,yi+1,s);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+const fbm=(x,y,s)=>(vn(x,y,s)+vn(x*2,y*2,s+1)*.5+vn(x*4,y*4,s+2)*.25+vn(x*8,y*8,s+3)*.125)/1.875;
+function rng(a,b,c){let t=(h2(a,b,seed+c)*4294967296)>>>0;return()=>{t+=0x6D2B79F5;let r=Math.imul(t^(t>>>15),1|t);r^=r+Math.imul(r^(r>>>7),61|r);return((r^(r>>>14))>>>0)/4294967296}}
+const pick=(r,a)=>a[Math.floor(r()*a.length)];
+
+/* ---------- terrain ---------- */
+const COL=['#1c3a4d','#2a5a70','#cdb784','#74a05a','#43703f','#8d9460','#807e7a','#e9eef0','#d6b96c','#3d86a8'];
+const TN=['Deep sea','Shallows','Beach','Grassland','Forest','Hills','Mountains','Snowcap','Desert','River'];
+function terr(tx,ty){
+  const e=fbm(tx*.04,ty*.04,seed),m=fbm(tx*.06+57,ty*.06+91,seed+40);
+  if(e<.37)return 0;if(e<.43)return 1;
+  if(e<.68&&Math.abs(fbm(tx*.03,ty*.03,seed+9)-.5)<.013)return 9;
+  if(e<.455)return 2;if(e>.74)return 7;if(e>.67)return 6;if(e>.6)return 5;
+  return m<.4?8:m>.56?4:3;
+}
+
+/* ---------- names & lore ---------- */
+const A=['Ar','Bel','Cor','Dun','Eld','Fen','Gor','Hal','Ith','Jor','Kel','Lun','Mar','Nor','Ori','Pell','Rha','Syl','Tor','Ul','Vor','Wyn','Yar','Zan'],
+ B=['a','an','dric','en','ia','is','la','mir','on','ric','wen','us','yn','thas'],
+ P1=['Oak','Raven','Stone','Ash','Gold','Mist','Iron','Thorn','Wolf','Frost','Ember','Hollow'],
+ P2=['ford','haven','wick','mere','gate','fall','watch','brook','stead','reach'],
+ D1=['Sunken','Whispering','Gilded','Hollow','Bleeding','Forgotten','Drowned'],D2=['Crypt','Vault','Warren','Barrow','Mines','Sanctum','Catacombs'],
+ RACE=['Human','Elf','Dwarf','Halfling','Gnome','Half-orc','Tiefling','Dragonborn','Half-elf'],
+ ROLE=['Merchant','Bard','Pilgrim','Scout','Hedge wizard','Bounty hunter','Wandering knight','Herbalist','Smuggler','Exiled noble'],
+ RC=['#e3b45c','#d77a9a','#9ad0e0','#8fc46a','#b08cdf','#e08a4a','#c9c9c9','#7fd1b0','#d26a5a','#f0e68c'],
+ QUIRK=['hums off-key constantly','never makes eye contact','collects odd buttons','speaks only in questions','is terrified of geese','counts every coin twice','laughs at the wrong moments','carries a talking skull in a satchel','insists everyone is a long-lost cousin','whittles tiny owls'],
+ WANT=['seeks a missing sibling','owes a dangerous debt','wants safe escort to the next town','hunts a legendary beast','is quietly spying for a rival lord','needs a rare herb before the new moon','is looking for a lost heirloom','wants to find an honest trade partner'],
+ SECRET=['is secretly a retired assassin','is cursed by a hag','knows where a forgotten vault lies','is the true heir to a lost crown','is a doppelganger','serves a cult of the Pale Moon'],
+ HOOK=['Strange lights are seen here after midnight.','A reward is posted for something that went missing here.','Locals refuse to speak of what happened last winter.','A rival adventuring party was last seen heading here.','A storm trapped travelers who never left.','A chest of cursed silver surfaced nearby.'],
+ TAV=['The Gilded Boar','The Laughing Lich','The Rusty Dragon','The Sleeping Giant','The Dancing Pony','The Last Lantern'],
+ GUARD=['a pack of dire wolves','a bored young wyvern','a ghoul pack led by a wight','a nest of giant spiders','an ancient animated armor','goblin raiders with a stolen cannon'];
+const nm=r=>pick(r,A)+pick(r,B);
+function npcFor(r,role){const race=pick(r,RACE);const ri=role!=null?role:Math.floor(r()*ROLE.length);return{name:nm(r),race,role:ROLE[ri],ri,quirk:pick(r,QUIRK),want:pick(r,WANT),secret:pick(r,SECRET)}}
+function poiOf(tx,ty,t){
+  const r2=h2(tx,ty,seed+5);
+  if((t==3||t==4)&&r2<.005)return'town';
+  if((t==5||t==6)&&r2<.01)return'dungeon';
+  if(t==3&&r2>.995)return'tower';
+  if(t==4&&r2>.99)return'shrine';
+  if((t==2||t==8)&&r2<.008)return'camp';
+  return null;
+}
+function poiName(p,tx,ty){const r=rng(tx,ty,77);
+  if(p=='town')return pick(r,P1)+pick(r,P2);
+  if(p=='dungeon')return'The '+pick(r,D1)+' '+pick(r,D2);
+  if(p=='tower')return nm(r)+'’s Spire';
+  if(p=='shrine')return'Shrine of '+nm(r);
+  return'Camp '+pick(r,P1);}
+
+/* ---------- chunk rendering ---------- */
+function poiSvg(p,x,y){
+  const s={town:`<rect x="-12" y="-4" width="10" height="9" fill="#a8482f"/><rect x="0" y="-8" width="12" height="13" fill="#c9683f"/><path d="M-14-4L-7-11 0-4zM-2-8L6-16 14-8z" fill="#5a2d1c"/>`,
+    dungeon:`<circle r="11" fill="#17130f" stroke="#e3b45c" stroke-width="2"/><path d="M-5 5V-1a5 5 0 0110 0V5z" fill="#e3b45c"/>`,
+    tower:`<rect x="-5" y="-14" width="10" height="26" fill="#cfc7b4" stroke="#2c261c" stroke-width="2"/><path d="M-8-14L0-24 8-14z" fill="#6b4ea0"/>`,
+    shrine:`<path d="M0-12L10 0 0 12-10 0z" fill="#8fe0c4" stroke="#17302a" stroke-width="2"/><circle r="3" fill="#fff"/>`,
+    camp:`<path d="M-11 8L0-8 11 8z" fill="#d9a35b" stroke="#2c1f10" stroke-width="2"/><circle cy="12" r="3" fill="#e0642c"/>`}[p];
+  return`<g class="poi" data-poi="${x},${y}" transform="translate(${x*T+16} ${y*T+16})"><circle r="17" fill="transparent"/>${s}${p=='town'?`<text class="lbl" y="${26}">${poiName(p,x,y)}</text>`:''}</g>`;
+}
+function build(cx,cy){
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');let s='',tt=[];
+  for(let j=0;j<C;j++){const ty=cy*C+j;tt[j]=[];for(let i=0;i<C;i++)tt[j][i]=terr(cx*C+i,ty);
+    let prev=-1,st=0;
+    for(let i=0;i<=C;i++){const t=i<C?tt[j][i]:-2;if(t!==prev){if(prev>=0)s+=`<rect x="${(cx*C+st)*T}" y="${ty*T}" width="${(i-st)*T+.6}" height="${T+.6}" fill="${COL[prev]}"/>`;prev=t;st=i}}}
+  for(let j=0;j<C;j++)for(let i=0;i<C;i++){
+    const tx=cx*C+i,ty=cy*C+j,t=tt[j][i],r=h2(tx,ty,seed+3),ox=(h2(tx,ty,seed+6)-.5)*14,oy=(h2(tx,ty,seed+7)-.5)*14,x=tx*T+16+ox,y=ty*T+16+oy,p=poiOf(tx,ty,t);
+    if(p){s+=poiSvg(p,tx,ty);continue}
+    if(t==4&&r<.7)s+=`<path d="M${x} ${y-9}l6 14h-12z" fill="#2c4f2d"/><path d="M${x} ${y-4}l7 14h-14z" fill="#356337"/>`;
+    else if(t==3&&r<.05)s+=`<path d="M${x} ${y-6}l4 9h-8z" fill="#4f7d3f"/>`;
+    else if(t==5&&r<.5)s+=`<path d="M${x-10} ${y+6}q10-16 20 0z" fill="#6a6f43"/>`;
+    else if(t==6&&r<.65)s+=`<path d="M${x-12} ${y+8}L${x} ${y-12}L${x+12} ${y+8}z" fill="#5c5a58"/><path d="M${x} ${y-12}L${x+5} ${y-3}L${x} ${y-6}L${x-4} ${y-2}z" fill="#eee"/>`;
+    else if(t==7&&r<.6)s+=`<path d="M${x-12} ${y+8}L${x} ${y-12}L${x+12} ${y+8}z" fill="#cfd8dc"/><path d="M${x} ${y-12}L${x+12} ${y+8}H${x+3}z" fill="#9fb0b8"/>`;
+    else if(t==8&&r<.08)s+=`<path d="M${x-9} ${y+3}q5-8 9 0t9 0" fill="none" stroke="#a88a3c" stroke-width="2"/>`;
+    else if(t==0&&r<.03)s+=`<path d="M${x-8} ${y}q4-4 8 0t8 0" fill="none" stroke="#3b6f8a" stroke-width="1.5"/>`;
+    else if(t==1&&r<.04)s+=`<path d="M${x-6} ${y}q3-3 6 0t6 0" fill="none" stroke="#7ab4cc" stroke-width="1.5"/>`;
+  }
+  const n=Math.floor(h2(cx,cy,seed+11)*3);
+  for(let i=0;i<n;i++){const tx=cx*C+Math.floor(h2(cx,cy,seed+20+i)*C),ty=cy*C+Math.floor(h2(cx,cy,seed+30+i)*C),t=terr(tx,ty);if(t<2||t==9||t==7)continue;
+    const nr=rng(cx,cy,100+i),role=Math.floor(nr()*ROLE.length);
+    s+=`<g class="npc" data-npc="${cx},${cy},${i}" transform="translate(${tx*T+16} ${ty*T+16})"><circle r="15" fill="transparent"/><circle r="9" fill="${RC[role]}" stroke="#14110c" stroke-width="2.5"/><text y="4" text-anchor="middle" font-size="11" font-weight="700" fill="#14110c" font-family="Alegreya Sans,sans-serif">${ROLE[role][0]}</text></g>`}
+  g.innerHTML=s;return g;
+}
+function ensure(){
+  const x0=Math.floor((view.x-W/2/view.k)/CS)-1,x1=Math.floor((view.x+W/2/view.k)/CS)+1,y0=Math.floor((view.y-H/2/view.k)/CS)-1,y1=Math.floor((view.y+H/2/view.k)/CS)+1;
+  for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++){const k=cx+','+cy;if(!cache.has(k)){const g=build(cx,cy);chunksG.appendChild(g);cache.set(k,g)}}
+  for(const [k,g] of cache){const [cx,cy]=k.split(',').map(Number);if(cx<x0-2||cx>x1+2||cy<y0-2||cy>y1+2){g.remove();cache.delete(k)}}
+}
+function resetWorld(){chunksG.innerHTML='';cache.clear();draw()}
+
+/* ---------- view ---------- */
+const tf=()=>`translate(${W/2-view.x*view.k} ${H/2-view.y*view.k}) scale(${view.k})`;
+function draw(){root.setAttribute('transform',tf());$('g').setAttribute('patternTransform',tf());ensure();hud()}
+function hud(){const tx=Math.floor(view.x/T),ty=Math.floor(view.y/T);$('hud').textContent=`Tile ${tx}, ${ty} · ${TN[terr(tx,ty)]} · ${(view.k*100)|0}%`+(ruler.length>1?` · Route ${routeLen().toFixed(0)} mi, ${(routeLen()/24).toFixed(1)} days on foot`:'')}
+function resize(){W=innerWidth;H=innerHeight;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);draw()}
+function zoom(f,cx=W/2,cy=H/2){const k=Math.min(3,Math.max(.45,view.k*f)),wx=view.x+(cx-W/2)/view.k,wy=view.y+(cy-H/2)/view.k;view.k=k;view.x=wx-(cx-W/2)/k;view.y=wy-(cy-H/2)/k;draw()}
+const toWorld=e=>({x:view.x+(e.clientX-W/2)/view.k,y:view.y+(e.clientY-H/2)/view.k});
+
+/* ---------- interaction ---------- */
+let down=null;
+svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);down={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y,t:e.target,moved:false}});
+svg.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;
+  if(Math.hypot(dx,dy)>5){down.moved=true;svg.classList.add('drag')}
+  if(down.moved){view.x=down.vx-dx/view.k;view.y=down.vy-dy/view.k;draw()}});
+svg.addEventListener('pointerup',e=>{svg.classList.remove('drag');if(down&&!down.moved)click(e,down.t);down=null});
+svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.15:1/1.15,e.clientX,e.clientY)},{passive:false});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const s=120/view.k,m={ArrowLeft:[-s,0],a:[-s,0],ArrowRight:[s,0],d:[s,0],ArrowUp:[0,-s],w:[0,-s],ArrowDown:[0,s],s:[0,s]}[e.key];
+  if(m){view.x+=m[0];view.y+=m[1];draw()}else if(e.key=='+'||e.key=='=')zoom(1.2);else if(e.key=='-')zoom(1/1.2)});
+
+function click(e,t){
+  const w=toWorld(e),poi=t.closest&&t.closest('[data-poi]'),npc=t.closest&&t.closest('[data-npc]'),pin=t.closest&&t.closest('[data-pin]');
+  if(tool=='pin'&&!pin){pins.push({x:w.x,y:w.y,label:'Pin '+(pins.length+1)});drawPins();showPin(pins.length-1);return}
+  if(tool=='ruler'){ruler.push(w);drawRuler();hud();return}
+  if(tool=='party'){party={x:w.x,y:w.y};drawParty();return}
+  if(pin)showPin(+pin.dataset.pin);else if(npc)showNpc(npc.dataset.npc);else if(poi)showPoi(poi.dataset.poi);else card.style.display='none';
+}
+function show(h){card.innerHTML=`<button class="x" aria-label="Close">×</button>`+h;card.style.display='block';card.querySelector('.x').onclick=()=>card.style.display='none'}
+function npcHtml(n){return`<div class="npcrow"><b>${n.name}</b> – ${n.race} ${n.role.toLowerCase()}<p>Quirk: ${n.quirk}.</p><p>Wants: ${n.want}.</p><p style="color:var(--mut)"><i>DM secret: ${n.secret}.</i></p></div>`}
+function showNpc(id){const [cx,cy,i]=id.split(',').map(Number),r=rng(cx,cy,100+i),role=Math.floor(r()*ROLE.length),n=npcFor(r,role);
+  show(`<h2>${n.name}</h2><p class="sub">Wandering ${n.race} ${n.role.toLowerCase()}</p><p>Quirk: ${n.quirk}.</p><p>Wants: ${n.want}.</p><p style="color:var(--mut)"><i>DM secret: ${n.secret}.</i></p>`)}
+function showPoi(id){const [tx,ty]=id.split(',').map(Number),t=terr(tx,ty),p=poiOf(tx,ty,t),r=rng(tx,ty,55),name=poiName(p,tx,ty);let h=`<h2>${name}</h2>`;
+  if(p=='town'){const pop=Math.floor(150+r()*r()*4000);h+=`<p class="sub">Settlement · pop. ~${pop} · ${TN[t].toLowerCase()}</p><h3>Inn</h3><p>${pick(r,TAV)}, run by ${nm(r)}.</p><h3>Notable folk</h3>`+[0,1,2].map(()=>npcHtml(npcFor(r))).join('')+`<h3>Rumor</h3><p>${pick(r,HOOK)}</p>`}
+  else if(p=='dungeon')h+=`<p class="sub">Dungeon · ${1+Math.floor(r()*4)} levels · suggested party level ${1+Math.floor(r()*9)}</p><h3>Guardians</h3><p>${pick(r,GUARD)}.</p><h3>Hook</h3><p>${pick(r,HOOK)}</p><h3>Treasure</h3><p>~${Math.floor(r()*900+100)} gp and one minor magic item.</p>`;
+  else if(p=='tower'){h+=`<p class="sub">Wizard’s tower</p><h3>Resident</h3>`+npcHtml(npcFor(r,4))+`<p>${pick(r,HOOK)}</p>`}
+  else if(p=='shrine')h+=`<p class="sub">Shrine · hidden in the ${TN[t].toLowerCase()}</p><p>Offerings here grant advantage on one roll until dawn. ${pick(r,HOOK)}</p>`;
+  else h+=`<p class="sub">Abandoned camp</p><p>Embers still warm. A ${pick(r,ROLE).toLowerCase()} left in a hurry; ${pick(r,HOOK).toLowerCase()}</p>`;
+  show(h)}
+function showPin(i){const p=pins[i];show(`<h2>Pin</h2><p class="sub">Your marker</p><input id="pl" value="${p.label.replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box" aria-label="Pin label"><p><button id="rm">Remove pin</button></p>`);
+  $('pl').oninput=e=>{p.label=e.target.value;drawPins()};$('rm').onclick=()=>{pins.splice(i,1);drawPins();card.style.display='none'}}
+
+/* ---------- overlays ---------- */
+function drawPins(){pinsG.innerHTML=pins.map((p,i)=>`<g class="pin" data-pin="${i}" transform="translate(${p.x} ${p.y})"><circle r="16" fill="transparent"/><path d="M0 0C-12-14-9-26 0-26S12-14 0 0z" fill="#d84a3a" stroke="#fff" stroke-width="2"/><circle cy="-17" r="3.5" fill="#fff"/><text class="lbl" y="-32">${p.label.replace(/[<&]/g,'')}</text></g>`).join('')}
+const routeLen=()=>{let d=0;for(let i=1;i<ruler.length;i++)d+=Math.hypot(ruler[i].x-ruler[i-1].x,ruler[i].y-ruler[i-1].y);return d/T*3}
+function drawRuler(){rulerG.innerHTML=ruler.length?`<polyline points="${ruler.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="#ffd36a" stroke-width="3" stroke-dasharray="9 6"/>`+ruler.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#ffd36a" stroke="#1b1710" stroke-width="2"/>`).join(''):''}
+function drawParty(){partyG.innerHTML=`<g transform="translate(${party.x} ${party.y})" pointer-events="none"><path d="M0 0V-34" stroke="#1b1710" stroke-width="3"/><path d="M0-34L22-27 0-19z" fill="#e3b45c" stroke="#1b1710" stroke-width="2"/><ellipse rx="9" ry="4" fill="#1b1710"/></g>`}
+
+/* ---------- controls ---------- */
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{tool=b.dataset.tool;document.querySelectorAll('[data-tool]').forEach(x=>x.classList.toggle('on',x==b))});
+$('clear').onclick=()=>{pins=[];ruler=[];drawPins();drawRuler();hud();card.style.display='none'};
+$('gridbtn').onclick=e=>{const r=$('gridrect');const on=r.style.display=='none';r.style.display=on?'':'none';e.target.classList.toggle('on',on)};
+$('nightbtn').onclick=e=>{const on=$('night').style.opacity!='1';$('night').style.opacity=on?1:0;e.target.classList.toggle('on',on)};
+$('zin').onclick=()=>zoom(1.25);$('zout').onclick=()=>zoom(1/1.25);
+$('d20').onclick=()=>show(`<h2>d20</h2><p class="sub">The dice have spoken</p><p style="font-size:44px;margin:0">${1+Math.floor(Math.random()*20)}</p>`);
+function setSeed(str){let h=7;for(const c of str)h=Math.imul(h^c.charCodeAt(0),16777619);seed=h|0;pins=[];ruler=[];drawPins();drawRuler();view={x:0,y:0,k:1};party={x:16,y:16};drawParty();card.style.display='none';
+  // nudge start to dry land
+  for(let r=0;r<40;r++){const t=terr(r,0);if(t>=2&&t<9&&t!=7){view.x=r*T+16;view.y=16;party={x:view.x,y:view.y};drawParty();break}}resetWorld()}
+$('seed').onchange=e=>setSeed(e.target.value);
+$('reroll').onclick=()=>{const v=nm(rng(Date.now()&0xffff,1,1))+Math.floor(Math.random()*999);$('seed').value=v;setSeed(v)};
+$('go').onclick=()=>{const m=$('goto').value.match(/(-?\d+)\D+(-?\d+)/);if(m){view.x=+m[1]*T+16;view.y=+m[2]*T+16;draw()}};
+$('goto').onkeydown=e=>{if(e.key=='Enter')$('go').click()};
+addEventListener('resize',resize);
+resize();setSeed($('seed').value);
+</script>
+</body>
+</html>
