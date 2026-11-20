@@ -98,40 +98,42 @@
       <div id="result" role="status" aria-live="polite">...</div>
     </section>
 
-       <!-- ===== 6. MAGIC 8-BALL ===== -->
-    <section class="tile peach">
-      <h2>Magic 8-ball</h2>
-      <p class="hint">Think of a yes or no question, type it in, then shake the ball.</p>
-      <input type="text" id="question" placeholder="Should I have another biscuit?" aria-label="Your question">
-      <div class="ball" id="ball">
-        <div class="ball-window" id="answer" role="status" aria-live="polite">8</div>
-      </div>
-      <div class="row">
-        <button id="shake">Shake it</button>
-      </div>
-    </section>
-
-    <!-- ===== 7. POSTCARD WALL ===== -->
-    <section class="tile wide sky" id="postcardTile" aria-labelledby="postcardTitle">
-      <h2 id="postcardTitle">Postcard wall</h2>
-      <p class="hint">Leave a little note for the next person who wanders in.</p>
-      <form class="postcard-form" id="postcardForm" autocomplete="off">
-        <label class="small" for="postcardName">Your name (optional)</label>
-        <input type="text" id="postcardName" maxlength="24" placeholder="Anonymous">
-        <label class="small" for="postcardMessage">Your message</label>
-        <textarea id="postcardMessage" maxlength="160" placeholder="Wish someone a good day..." required></textarea>
-        <span class="small" id="postcardCount">0 / 160</span>
-        <div class="row" id="postcardThemes" role="group" aria-label="Postcard colour"></div>
-        <div class="row" id="postcardStamps" role="group" aria-label="Postcard stamp"></div>
-        <div class="postcard-hp" aria-hidden="true"><label>Website <input type="text" id="postcardWebsite" tabindex="-1" autocomplete="off"></label></div>
-        <div class="row">
-          <button type="submit" id="postcardSend">Send postcard</button>
-          <span class="small" id="postcardTotal"></span>
+    <div class="paired-tiles">
+      <!-- ===== 6. MAGIC 8-BALL ===== -->
+      <section class="tile peach">
+        <h2>Magic 8-ball</h2>
+        <p class="hint">Think of a yes or no question, type it in, then shake the ball.</p>
+        <input type="text" id="question" placeholder="Should I have another biscuit?" aria-label="Your question">
+        <div class="ball" id="ball">
+          <div class="ball-window" id="answer" role="status" aria-live="polite">8</div>
         </div>
-      </form>
-      <p class="small" id="postcardStatus" role="status" aria-live="polite"></p>
-      <ul class="postcard-list" id="postcardList" aria-label="Visitor postcards"></ul>
-    </section>
+        <div class="row">
+          <button id="shake">Shake it</button>
+        </div>
+      </section>
+
+      <!-- ===== 7. POSTCARD WALL ===== -->
+      <section class="tile sky" id="postcardTile" aria-labelledby="postcardTitle">
+        <h2 id="postcardTitle">Postcard wall</h2>
+        <p class="hint">Leave a little note for the next person who wanders in.</p>
+        <form class="postcard-form" id="postcardForm" autocomplete="off">
+          <label class="small" for="postcardName">Your name (optional)</label>
+          <input type="text" id="postcardName" maxlength="24" placeholder="Anonymous">
+          <label class="small" for="postcardMessage">Your message</label>
+          <textarea id="postcardMessage" maxlength="160" placeholder="Wish someone a good day..." required></textarea>
+          <span class="small" id="postcardCount">0 / 160</span>
+          <div class="row" id="postcardThemes" role="group" aria-label="Postcard colour"></div>
+          <div class="row" id="postcardStamps" role="group" aria-label="Postcard stamp"></div>
+          <div class="postcard-hp" aria-hidden="true"><label>Website <input type="text" id="postcardWebsite" tabindex="-1" autocomplete="off"></label></div>
+          <div class="row">
+            <button type="submit" id="postcardSend">Send postcard</button>
+            <span class="small" id="postcardTotal"></span>
+          </div>
+        </form>
+        <p class="small" id="postcardStatus" role="status" aria-live="polite"></p>
+        <ul class="postcard-list" id="postcardList" aria-label="Visitor postcards"></ul>
+      </section>
+    </div>
 
     <!-- ===== 8. SCRATCHPAD ===== -->
     <section class="tile wide sky">
