@@ -1,29 +1,27 @@
 import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
-import { serveStatic } from '@hono/node-server/serve-static'
-import { randomBytes } from 'node:crypto'
 import { COUNTRIES } from '../shared/countries'
 import { act, addPlayer, newGame, project, type Action } from '../shared/engine'
 import { Budget, narrate } from './narrator'
-import { createRoom, getRoom, init, saveRoom } from './store'
+import { createRoom, getRoom, saveRoom } from './store'
 
 const budget = new Budget(Number(process.env.AI_BUDGET_TOKENS_GLOBAL ?? 200000), Number(process.env.AI_BUDGET_TOKENS_PER_ROOM ?? 20000))
-const app = new Hono()
+export const app = new Hono()
+const hex = (n: number) => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => b.toString(16).padStart(2, '0')).join('')
 const api = new Hono()
 const enc = (r: { country: string; encounter: string }) => COUNTRIES[r.country].encounters[r.encounter]
 
 api.post('/rooms', async c => {
   const { name } = await c.req.json()
-  const code = randomBytes(3).toString('hex').toUpperCase(), pid = randomBytes(16).toString('hex')
+  const code = hex(3).toUpperCase(), pid = hex(16)
   const room = { code, players: { [pid]: String(name).slice(0, 20) }, country: 'iceland', encounter: 'draugr_barrow',
-    state: newGame(randomBytes(4).readUInt32BE(), COUNTRIES.iceland.encounters.draugr_barrow) }
+    state: newGame(crypto.getRandomValues(new Uint32Array(1))[0], COUNTRIES.iceland.encounters.draugr_barrow) }
   addPlayer(room.state, pid, room.players[pid], enc(room))
   await createRoom(room)
   return c.json({ code, playerId: pid })
 })
 api.post('/rooms/:code/join', async c => {
   const room = await getRoom(c.req.param('code').toUpperCase()); if (!room) return c.json({ error: 'no such room' }, 404)
-  const { name } = await c.req.json(), pid = randomBytes(16).toString('hex')
+  const { name } = await c.req.json(), pid = hex(16)
   try { addPlayer(room.state, pid, String(name).slice(0, 20), enc(room)) } catch (e) { return c.json({ error: (e as Error).message }, 400) }
   room.players[pid] = String(name).slice(0, 20)
   if (!(await saveRoom(room, 0))) return c.json({ error: 'conflict, retry' }, 409)
@@ -52,9 +50,5 @@ api.post('/rooms/:code/act', async c => {
 })
 
 app.route('/dnd/api', api)
+app.route('/api/dnd', api)
 app.get('/dnd-co', c => c.redirect('/dnd/'))
-app.use('/dnd/*', serveStatic({ root: './dist', rewriteRequestPath: p => p.replace(/^\/dnd/, '') }))
-app.get('/dnd/*', serveStatic({ path: './dist/index.html' }))
-await init()
-serve({ fetch: app.fetch, port: Number(process.env.PORT ?? 8787) })
-console.log('dnd server on', process.env.PORT ?? 8787)
