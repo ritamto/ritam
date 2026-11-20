@@ -449,12 +449,9 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
   border-radius: 50%;
 }
 .postcard-color[aria-pressed=true] { border-color: var(--paper); box-shadow: 0 0 0 2px var(--ink); }
-.postcard-color-0 { background: #ffb6a3; }
-.postcard-color-1 { background: #ffe28a; }
-.postcard-color-2 { background: #a9e8d1; }
-.postcard-color-3 { background: #a8d7ff; }
-.postcard-color-4 { background: #d3b8ff; }
-.postcard-color-5 { background: #ffc4dc; }
+.postcard-color-0 { background: #ffe28a; }
+.postcard-color-1 { background: #a9e8d1; }
+.postcard-color-2 { background: #d3b8ff; }
 
 .postcard-stamp-choice {
   width: 28px;
@@ -476,6 +473,8 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
   list-style: none;
   padding: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
   gap: .75rem;
   min-height: 0;
   align-content: start;
@@ -485,6 +484,8 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
 .postcard {
   position: relative;
   min-height: 160px;
+  height: auto;
+  min-width: 0;
   padding: 1rem;
   border: 2px solid rgba(29, 18, 48, .25);
   border-radius: 6px 16px 6px 16px;
@@ -497,15 +498,12 @@ footer { max-width: 1200px; margin: 2.5rem auto 0; color: #cbbfe6; display: grid
 .postcard:hover { transform: rotate(0) translateY(-3px); box-shadow: 4px 8px 0 rgba(29, 18, 48, .2); }
 .postcard:nth-child(3n + 1) { --postcard-tilt: -1deg; }
 .postcard:nth-child(3n + 2) { --postcard-tilt: 1deg; }
-.postcard-tone-0 { background: #ffb6a3; }
-.postcard-tone-1 { background: #ffe28a; }
-.postcard-tone-2 { background: #a9e8d1; }
-.postcard-tone-3 { background: #a8d7ff; }
-.postcard-tone-4 { background: #d3b8ff; }
-.postcard-tone-5 { background: #ffc4dc; }
+.postcard-tone-0 { background: #ffe28a; }
+.postcard-tone-1 { background: #a9e8d1; }
+.postcard-tone-2 { background: #d3b8ff; }
 .postcard-header { display: flex; justify-content: space-between; gap: .5rem; align-items: flex-start; }
 .postcard-stamp { flex: none; font-size: 1.5rem; line-height: 1; }
-.postcard-message { margin-top: .7rem; white-space: pre-wrap; }
+.postcard-message { max-width: 100%; margin-top: .7rem; overflow-wrap: anywhere; white-space: pre-wrap; }
 .postcard-list:empty::after { content: "No messages yet. Be the first to leave a postcard!"; opacity: .75; }
 
 .postcard-dialog {

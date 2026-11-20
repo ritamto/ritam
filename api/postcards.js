@@ -11,7 +11,7 @@ const { neon } = require("@neondatabase/serverless");
 const KEEP = 200;
 const SHOW = KEEP;
 const COOLDOWN = 30;
-const THEMES = 6;
+const THEMES = [1, 2, 4];
 const STAMPS = 4;
 const LINK = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|io|in|co|ly|me|xyz|app|dev|ru|cn)\b)/i;
 
@@ -120,7 +120,7 @@ module.exports = async function handler(req, res) {
 
       if (!msg) return res.status(400).json({ error: "empty" });
       if (LINK.test(msg) || LINK.test(name)) return res.status(400).json({ error: "links" });
-      if (!Number.isInteger(theme) || theme < 0 || theme >= THEMES) return res.status(400).json({ error: "bad" });
+      if (!Number.isInteger(theme) || THEMES.indexOf(theme) < 0) return res.status(400).json({ error: "bad" });
       if (!Number.isInteger(stamp) || stamp < 0 || stamp >= STAMPS) return res.status(400).json({ error: "bad" });
 
       const key = visitorKey(req);

@@ -6,7 +6,12 @@
   var API = "/api/postcards";
   var KEEP = 200;
   var POLL_MS = 30000;
-  var THEMES = ["Coral", "Sunshine", "Mint", "Sky", "Lilac", "Blush"];
+  var THEMES = [
+    { name: "Yellow", value: 1 },
+    { name: "Green", value: 2 },
+    { name: "Purple", value: 4 }
+  ];
+  var THEME_INDEX = [0, 0, 1, 1, 2, 2];
   var STAMPS = ["✦", "♥", "☀", "✉"];
   var tile = $("postcardTile");
   if (!tile) return;
@@ -44,11 +49,12 @@
   }
 
   function normalize(postcard) {
+    var storedTheme = clampInt(postcard.theme == null ? postcard.color : postcard.theme, THEME_INDEX.length);
     return {
       id: String(postcard.id),
       name: clean(postcard.name).slice(0, 24),
       msg: clean(postcard.msg).slice(0, 160),
-      theme: clampInt(postcard.theme == null ? postcard.color : postcard.theme, THEMES.length),
+      theme: THEME_INDEX[storedTheme],
       stamp: clampInt(postcard.stamp == null ? postcard.shape : postcard.stamp, STAMPS.length),
       t: Number(postcard.t) || Date.now()
     };
@@ -69,9 +75,9 @@
   function readLocal() {
     try {
       var saved = memory.get("ritam.postcards.local");
-      if (saved) return JSON.parse(saved);
+      if (saved) return JSON.parse(saved).map(normalize);
       var legacy = JSON.parse(memory.get("ritam.jar.local") || "[]").map(normalize);
-      if (legacy.length) memory.set("ritam.postcards.local", JSON.stringify(legacy.slice(-30)));
+      if (legacy.length) memory.set("ritam.postcards.local", JSON.stringify(legacy.slice(-30).map(serializeLocal)));
       return legacy;
     } catch (e) {
       return [];
@@ -81,7 +87,18 @@
   function saveLocal(postcard) {
     var local = readLocal();
     local.push(postcard);
-    memory.set("ritam.postcards.local", JSON.stringify(local.slice(-30)));
+    memory.set("ritam.postcards.local", JSON.stringify(local.slice(-30).map(serializeLocal)));
+  }
+
+  function serializeLocal(postcard) {
+    return {
+      id: postcard.id,
+      name: postcard.name,
+      msg: postcard.msg,
+      theme: THEMES[postcard.theme].value,
+      stamp: postcard.stamp,
+      t: postcard.t
+    };
   }
 
   function addPostcards(items) {
@@ -112,7 +129,7 @@
       sender.textContent = postcard.name || "Anonymous";
       var stamp = document.createElement("span");
       stamp.className = "postcard-stamp";
-      stamp.setAttribute("aria-label", THEMES[postcard.theme] + " postcard stamp");
+      stamp.setAttribute("aria-label", THEMES[postcard.theme].name + " postcard stamp");
       stamp.textContent = STAMPS[postcard.stamp];
       header.appendChild(sender);
       header.appendChild(stamp);
@@ -147,7 +164,7 @@
       })
       .catch(function () {
         demoMode = true;
-        addPostcards(SEEDS.concat(readLocal()).map(normalize));
+        addPostcards(SEEDS.map(normalize).concat(readLocal()));
         setStatus("Demo mode: messages are saved on this device.");
       });
   }
@@ -171,11 +188,11 @@
     var themes = $("postcardThemes");
     var stamps = $("postcardStamps");
 
-    THEMES.forEach(function (name, index) {
+    THEMES.forEach(function (theme, index) {
       var button = document.createElement("button");
       button.type = "button";
       button.className = "postcard-color postcard-color-" + index;
-      button.setAttribute("aria-label", name);
+      button.setAttribute("aria-label", theme.name);
       button.setAttribute("aria-pressed", String(index === selectedTheme));
       button.addEventListener("click", function () {
         selectedTheme = index;
@@ -220,7 +237,7 @@
       body: JSON.stringify({
         name: name,
         msg: msg,
-        theme: selectedTheme,
+        theme: THEMES[selectedTheme].value,
         stamp: selectedStamp,
         website: $("postcardWebsite").value
       })
@@ -249,7 +266,7 @@
             id: "L" + Date.now(),
             name: name,
             msg: msg,
-            theme: selectedTheme,
+            theme: THEMES[selectedTheme].value,
             stamp: selectedStamp,
             t: Date.now()
           });
